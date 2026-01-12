@@ -1,0 +1,5 @@
+{
+  "name": "BarFlow AI",
+  "description": "Une application complète de gestion de bar (Point de Vente) avec tableau de bord, affichage cuisine et assistant mixologue IA intégré.",
+  "requestFramePermissions": []
+}

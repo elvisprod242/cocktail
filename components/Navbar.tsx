@@ -1,0 +1,68 @@
+import React from 'react';
+import { LayoutDashboard, Beer, ClipboardList, Sparkles, Package } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+
+export const Navbar: React.FC = () => {
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  const navItems = [
+    { path: '/', label: 'Caisse', icon: <Beer size={24} /> },
+    { path: '/kitchen', label: 'Cuisine', icon: <ClipboardList size={24} /> },
+    { path: '/dashboard', label: 'Stats', icon: <LayoutDashboard size={24} /> },
+    { path: '/products', label: 'Produits', icon: <Package size={24} /> },
+    { path: '/ai-mixologist', label: 'IA Mixo', icon: <Sparkles size={24} /> },
+  ];
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <nav className="hidden md:flex flex-col w-20 lg:w-64 bg-slate-900 border-r border-slate-800 h-screen fixed left-0 top-0 z-50">
+        <div className="p-6 flex items-center justify-center lg:justify-start">
+          <div className="w-10 h-10 bg-gradient-to-tr from-bar-accent to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-bar-accent/30">
+            <Beer className="text-white" size={24} />
+          </div>
+          <span className="hidden lg:block ml-3 font-bold text-xl tracking-wide bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+            BarFlow
+          </span>
+        </div>
+
+        <div className="flex-1 py-8 flex flex-col gap-2 px-3">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center p-3 rounded-xl transition-all duration-200 ${
+                isActive(item.path)
+                  ? 'bg-bar-accent text-white shadow-lg shadow-bar-accent/25'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <span className="flex-shrink-0">{item.icon}</span>
+              <span className="hidden lg:block ml-3 font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+
+      {/* Mobile Bottom Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-50 px-4 pb-safe">
+        <div className="flex justify-around items-center h-16">
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+                isActive(item.path) ? 'text-bar-accent' : 'text-slate-500'
+              }`}
+            >
+              {item.icon}
+              <span className="text-[10px] font-medium">{item.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+    </>
+  );
+};
