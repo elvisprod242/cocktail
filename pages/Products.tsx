@@ -111,11 +111,10 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
                  </div>
               </div>
               <div className="p-4 flex-1 flex flex-col">
-                 <div className="flex justify-between items-start mb-2">
-                   <h3 className="font-bold text-white text-lg leading-tight">{product.name}</h3>
+                 <div className="flex justify-between items-center mb-4">
+                   <h3 className="font-bold text-white text-lg leading-tight line-clamp-2">{product.name}</h3>
                    <span className="font-bold text-bar-accent whitespace-nowrap ml-2">{product.price}{currency}</span>
                  </div>
-                 <p className="text-slate-400 text-sm mb-4 line-clamp-2 h-10">{product.description || "Aucune description"}</p>
                  
                  <div className="mt-auto">
                    <button 

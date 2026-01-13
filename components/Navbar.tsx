@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Beer, ClipboardList, Package, Shapes, Settings, Armchair, Users } from 'lucide-react';
+import { LayoutDashboard, Beer, ClipboardList, Package, Shapes, Settings, Armchair, Users, History } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
@@ -11,6 +11,7 @@ export const Navbar: React.FC = () => {
     { path: '/', label: 'Stats', icon: <LayoutDashboard size={24} /> },
     { path: '/pos', label: 'Caisse', icon: <Beer size={24} /> },
     { path: '/kitchen', label: 'Commande', icon: <ClipboardList size={24} /> },
+    { path: '/history', label: 'Historique', icon: <History size={24} /> },
     { path: '/clients', label: 'Clients', icon: <Users size={24} /> },
     { path: '/tables', label: 'Tables', icon: <Armchair size={24} /> },
     { path: '/products', label: 'Produits', icon: <Package size={24} /> },

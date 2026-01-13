@@ -1,4 +1,4 @@
-import { Product, Order, OrderStatus, CartItem, CategoryDef, Category, TableDef, Client } from '../types';
+import { Product, Order, OrderStatus, CartItem, CategoryDef, Category, TableDef, Client, PaymentMethod } from '../types';
 import { INITIAL_MENU } from '../constants';
 
 let db: any = null;
@@ -23,13 +23,17 @@ export const initDB = async () => {
       bytes[i] = binaryString.charCodeAt(i);
     }
     db = new SQL.Database(bytes);
-    // Migration "à chaud" pour s'assurer que les tables existent si on vient d'une vieille version
-    createTables(); 
   } else {
     db = new SQL.Database();
-    createTables();
-    seedData();
-    saveDB();
+  }
+  
+  // Création des tables et Migrations
+  createTables();
+  applyMigrations(); // Appliquer les changements de schéma pour les utilisateurs existants
+  
+  if (!savedDb) {
+      seedData();
+      saveDB();
   }
 };
 
@@ -73,7 +77,8 @@ const createTables = () => {
       table_number INTEGER,
       table_name TEXT,
       client_id TEXT,
-      client_name TEXT
+      client_name TEXT,
+      payment_method TEXT
     );
   `);
 
@@ -105,6 +110,7 @@ const createTables = () => {
       notes TEXT,
       loyalty_points INTEGER DEFAULT 0,
       total_spent REAL DEFAULT 0,
+      balance REAL DEFAULT 0,
       last_visit INTEGER
     );
   `);
@@ -115,6 +121,12 @@ const createTables = () => {
       value TEXT
     );
   `);
+};
+
+// Fonction pour gérer les mises à jour de structure sans perdre les données
+const applyMigrations = () => {
+    try { db.run("ALTER TABLE clients ADD COLUMN balance REAL DEFAULT 0"); } catch (e) {}
+    try { db.run("ALTER TABLE orders ADD COLUMN payment_method TEXT"); } catch (e) {}
 };
 
 const seedData = () => {
@@ -195,7 +207,7 @@ export const saveSetting = (key: string, value: string) => {
   saveDB();
 };
 
-// CLIENTS (Nouveau)
+// CLIENTS
 export const getClients = (): Client[] => {
   if (!db) return [];
   try {
@@ -211,6 +223,7 @@ export const getClients = (): Client[] => {
         notes: row.notes,
         loyaltyPoints: row.loyalty_points,
         totalSpent: row.total_spent,
+        balance: row.balance || 0,
         lastVisit: row.last_visit
       });
     }
@@ -223,8 +236,8 @@ export const getClients = (): Client[] => {
 
 export const addClient = (client: Client) => {
   if (!db) return;
-  db.run("INSERT INTO clients (id, name, phone, email, notes, loyalty_points, total_spent, last_visit) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
-    client.id, client.name, client.phone || '', client.email || '', client.notes || '', 0, 0, Date.now()
+  db.run("INSERT INTO clients (id, name, phone, email, notes, loyalty_points, total_spent, balance, last_visit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
+    client.id, client.name, client.phone || '', client.email || '', client.notes || '', 0, 0, 0, Date.now()
   ]);
   saveDB();
 };
@@ -242,6 +255,15 @@ export const deleteClient = (id: string) => {
   db.run("DELETE FROM clients WHERE id = ?", [id]);
   saveDB();
 };
+
+// Gestion spécifique de l'ardoise : Remboursement ou ajout de crédit
+export const updateClientBalance = (clientId: string, amount: number) => {
+    if (!db) return;
+    // amount positif = crédit ajouté ou remboursement de dette
+    // amount négatif = nouvelle dette
+    db.run("UPDATE clients SET balance = balance + ? WHERE id = ?", [amount, clientId]);
+    saveDB();
+}
 
 // TABLES
 export const getTables = (): TableDef[] => {
@@ -348,8 +370,6 @@ export const deleteProduct = (id: string) => {
 export const getOrders = (): Order[] => {
   if (!db) return [];
   try {
-      // Colonnes client_id/client_name ajoutées via migration implicite si nouvelle install
-      // Pour éviter les crashs sur les vieilles DB, on select tout
       const stmt = db.prepare("SELECT * FROM orders ORDER BY timestamp DESC");
       const orders: Order[] = [];
       
@@ -380,13 +400,13 @@ export const getOrders = (): Order[] => {
           tableName: row.table_name || (row.table_number ? row.table_number.toString() : '?'),
           clientId: row.client_id,
           clientName: row.client_name,
+          paymentMethod: row.payment_method as PaymentMethod,
           items: items
         });
       }
       stmt.free();
       return orders;
   } catch (e) {
-      // Fallback si la migration a échoué
       return [];
   }
 };
@@ -395,7 +415,7 @@ export const insertOrder = (order: Order) => {
   if (!db) return;
   
   // 1. Insert Order
-  db.run("INSERT INTO orders (id, total, status, timestamp, table_number, table_name, client_id, client_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+  db.run("INSERT INTO orders (id, total, status, timestamp, table_number, table_name, client_id, client_name, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [
     order.id, 
     order.total, 
     order.status, 
@@ -403,7 +423,8 @@ export const insertOrder = (order: Order) => {
     order.tableNumber || 0,
     order.tableName || (order.tableNumber ? order.tableNumber.toString() : 'Unknown'),
     order.clientId || null,
-    order.clientName || null
+    order.clientName || null,
+    order.paymentMethod || null
   ]);
 
   // 2. Insert Items
@@ -413,20 +434,6 @@ export const insertOrder = (order: Order) => {
   });
   stmt.free();
 
-  // 3. Update Client Loyalty if attached (Automatique)
-  if (order.clientId) {
-      // 1 point par tranche de 10 unités monétaires
-      const pointsEarned = Math.floor(order.total / 10);
-      
-      db.run(`
-        UPDATE clients 
-        SET total_spent = total_spent + ?, 
-            loyalty_points = loyalty_points + ?,
-            last_visit = ?
-        WHERE id = ?
-      `, [order.total, pointsEarned, Date.now(), order.clientId]);
-  }
-
   saveDB();
 };
 
@@ -434,4 +441,37 @@ export const updateOrderStatusInDB = (orderId: string, status: OrderStatus) => {
   if (!db) return;
   db.run("UPDATE orders SET status = ? WHERE id = ?", [status, orderId]);
   saveDB();
+};
+
+// PROCESS PAYMENT (Nouveau)
+export const processOrderPayment = (orderId: string, method: PaymentMethod, total: number, clientId?: string) => {
+    if (!db) return;
+
+    // 1. Mettre à jour la commande
+    db.run("UPDATE orders SET status = ?, payment_method = ? WHERE id = ?", [OrderStatus.PAID, method, orderId]);
+
+    // 2. Gestion Client (Fidélité et Ardoise)
+    if (clientId) {
+        let sql = `
+            UPDATE clients 
+            SET total_spent = total_spent + ?, 
+                loyalty_points = loyalty_points + ?,
+                last_visit = ?
+        `;
+        const pointsEarned = Math.floor(total / 10);
+        const params: any[] = [total, pointsEarned, Date.now()];
+
+        // Si Ardoise, on met à jour le solde (Dette = négatif)
+        if (method === PaymentMethod.TAB) {
+            sql += `, balance = balance - ?`;
+            params.push(total);
+        }
+
+        sql += ` WHERE id = ?`;
+        params.push(clientId);
+
+        db.run(sql, params);
+    }
+    
+    saveDB();
 };

@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Product, CartItem, CategoryDef, TableDef, Order, Client } from '../types';
 import { ProductCard } from '../components/ProductCard';
 import { getIconComponent } from '../components/IconRegistry';
-import { Search, ShoppingCart, Trash2, CreditCard, ChevronUp, Armchair, X, User, UserPlus } from 'lucide-react';
+import { Search, ShoppingCart, Trash2, CreditCard, ChevronUp, Armchair, X, User, UserPlus, Plus, Minus } from 'lucide-react';
 
 interface POSProps {
   products: Product[];
@@ -12,6 +12,7 @@ interface POSProps {
   clients: Client[];
   cart: CartItem[];
   addToCart: (product: Product) => void;
+  updateCartItemQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
   placeOrder: (tableName: string, client?: Client | null) => void;
@@ -26,6 +27,7 @@ export const POS: React.FC<POSProps> = ({
   clients,
   cart, 
   addToCart, 
+  updateCartItemQuantity,
   removeFromCart, 
   placeOrder,
   currency
@@ -204,18 +206,36 @@ export const POS: React.FC<POSProps> = ({
            ) : (
              cart.map(item => (
                <div key={item.id} className="flex justify-between items-center bg-slate-800/50 p-3 rounded-lg border border-slate-700">
-                 <div className="flex items-center gap-3">
-                   <div className="bg-slate-800 w-8 h-8 rounded-full flex items-center justify-center text-slate-400 text-xs font-bold">
-                     x{item.quantity}
+                 <div className="flex items-center gap-3 flex-1">
+                   <div className="flex items-center gap-1 bg-slate-900 rounded-lg p-1 border border-slate-700">
+                       <button 
+                         onClick={() => updateCartItemQuantity(item.id, item.quantity - 1)}
+                         className="w-6 h-6 flex items-center justify-center bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-400 rounded transition-colors"
+                       >
+                         <Minus size={12} />
+                       </button>
+                       <input 
+                         type="number" 
+                         value={item.quantity}
+                         onChange={(e) => updateCartItemQuantity(item.id, parseInt(e.target.value) || 0)}
+                         className="w-8 bg-transparent text-center text-white text-sm font-bold outline-none"
+                         min="1"
+                       />
+                        <button 
+                         onClick={() => updateCartItemQuantity(item.id, item.quantity + 1)}
+                         className="w-6 h-6 flex items-center justify-center bg-slate-800 hover:bg-slate-700 hover:text-white text-slate-400 rounded transition-colors"
+                       >
+                         <Plus size={12} />
+                       </button>
                    </div>
-                   <div>
-                     <p className="text-white font-medium text-sm">{item.name}</p>
+                   <div className="min-w-0">
+                     <p className="text-white font-medium text-sm truncate">{item.name}</p>
                      <p className="text-bar-accent text-xs font-bold">{item.price}{currency}</p>
                    </div>
                  </div>
                  <button 
                    onClick={() => removeFromCart(item.id)}
-                   className="text-slate-500 hover:text-red-500 transition-colors p-2"
+                   className="text-slate-500 hover:text-red-500 transition-colors p-2 ml-2"
                  >
                    <Trash2 size={16} />
                  </button>

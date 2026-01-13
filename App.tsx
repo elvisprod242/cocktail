@@ -9,6 +9,7 @@ import { CategoriesPage } from './pages/CategoriesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TablesPage } from './pages/TablesPage'; 
 import { ClientsPage } from './pages/ClientsPage';
+import { SalesHistoryPage } from './pages/SalesHistoryPage';
 import { CartItem, Product, Order, OrderStatus, CategoryDef, TableDef, Client } from './types';
 import { initDB, getProducts, getOrders, insertOrder, updateOrderStatusInDB, getCategories, getTables, getClients, getSetting, saveSetting } from './services/db';
 import { Loader2 } from 'lucide-react';
@@ -63,6 +64,16 @@ const App: React.FC = () => {
       }
       return [...prev, { ...product, quantity: 1 }];
     });
+  };
+
+  const updateCartItemQuantity = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeFromCart(productId);
+      return;
+    }
+    setCart(prev => prev.map(item => 
+      item.id === productId ? { ...item, quantity: newQuantity } : item
+    ));
   };
 
   const removeFromCart = (productId: string) => {
@@ -133,7 +144,8 @@ const App: React.FC = () => {
                   activeOrders={orders}
                   clients={clients}
                   cart={cart} 
-                  addToCart={addToCart} 
+                  addToCart={addToCart}
+                  updateCartItemQuantity={updateCartItemQuantity}
                   removeFromCart={removeFromCart} 
                   clearCart={clearCart}
                   placeOrder={placeOrder}
@@ -147,6 +159,15 @@ const App: React.FC = () => {
                 <Kitchen 
                   orders={orders} 
                   updateOrderStatus={updateOrderStatus} 
+                />
+              } 
+            />
+             <Route 
+              path="/history" 
+              element={
+                <SalesHistoryPage 
+                  orders={orders} 
+                  currency={currency}
                 />
               } 
             />

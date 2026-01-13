@@ -13,6 +13,7 @@
           extend: {
             fontFamily: {
               sans: ['Inter', 'sans-serif'],
+              mono: ['Courier Prime', 'Courier New', 'monospace'], // Ajout police ticket
             },
             colors: {
               bar: {
@@ -62,6 +63,30 @@
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;  /* Firefox */
       }
+
+      /* PRINT STYLES - TICKET DE CAISSE */
+      @media print {
+        body * {
+          visibility: hidden;
+        }
+        #printable-receipt, #printable-receipt * {
+          visibility: visible;
+        }
+        #printable-receipt {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 80mm; /* Largeur standard imprimante thermique */
+          padding: 0;
+          margin: 0;
+          background: white;
+          color: black;
+        }
+        /* Masquer les éléments d'interface pendant l'impression */
+        .no-print {
+          display: none !important;
+        }
+      }
     </style>
   <script type="importmap">
 {
@@ -79,5 +104,6 @@
 </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
   </body>
 </html>

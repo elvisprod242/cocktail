@@ -27,6 +27,7 @@ export interface Client {
   notes?: string;
   loyaltyPoints: number;
   totalSpent: number;
+  balance: number; // Nouveau: Positif = Crédit, Négatif = Dette (Ardoise)
   lastVisit?: number;
 }
 
@@ -50,16 +51,24 @@ export enum OrderStatus {
   PAID = 'Payé'
 }
 
+export enum PaymentMethod {
+  CASH = 'Espèces',
+  CARD = 'Carte Bancaire',
+  MOBILE_MONEY = 'Mobile Money',
+  TAB = 'Ardoise'
+}
+
 export interface Order {
   id: string;
   items: CartItem[];
   total: number;
   status: OrderStatus;
   timestamp: number;
-  tableNumber?: number; // On garde le type number pour la compatibilité, mais on stockera souvent le nom ou l'ID
-  tableName?: string; // Nouveau champ pour le nom de la table
-  clientId?: string; // Liaison optionnelle avec un client
+  tableNumber?: number; 
+  tableName?: string; 
+  clientId?: string; 
   clientName?: string;
+  paymentMethod?: PaymentMethod; // Nouveau
 }
 
 export interface SalesData {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Client, Order } from '../types';
 import { addClient, updateClient, deleteClient } from '../services/db';
-import { Users, Plus, Search, Phone, Mail, Award, Edit2, Trash2, X, History, ShoppingBag } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, Award, Edit2, Trash2, X, History, ShoppingBag, Wallet } from 'lucide-react';
 
 interface ClientsPageProps {
   clients: Client[];
@@ -61,6 +61,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
         notes,
         loyaltyPoints: 0,
         totalSpent: 0,
+        balance: 0,
         lastVisit: Date.now()
       };
       addClient(newClient);
@@ -93,7 +94,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
             <Users className="text-bar-accent" />
             Gestion Clients
           </h1>
-          <p className="text-slate-400 mt-1">Fidélisation et historique des achats</p>
+          <p className="text-slate-400 mt-1">Fidélisation et gestion des ardoises</p>
         </div>
         
         <button 
@@ -143,18 +144,30 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
               {client.email && <p className="text-sm text-slate-400 flex items-center gap-2"><Mail size={14} /> {client.email}</p>}
             </div>
 
-            <div className="bg-slate-800/50 rounded-lg p-3 flex justify-between items-center border border-slate-800">
-               <div>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <div className="bg-slate-800/50 rounded-lg p-2 border border-slate-800">
                   <p className="text-xs text-slate-500 mb-1">Fidélité</p>
-                  <p className="text-bar-accent font-bold flex items-center gap-1">
+                  <p className="text-bar-accent font-bold flex items-center gap-1 text-sm">
                     <Award size={14} /> {client.loyaltyPoints} pts
                   </p>
                </div>
-               <div className="text-right">
-                  <p className="text-xs text-slate-500 mb-1">Total</p>
-                  <p className="text-white font-bold">{client.totalSpent.toFixed(2)}{currency}</p>
+               <div className="bg-slate-800/50 rounded-lg p-2 border border-slate-800">
+                  <p className="text-xs text-slate-500 mb-1">Total Dépensé</p>
+                  <p className="text-white font-bold text-sm">{client.totalSpent.toFixed(2)}{currency}</p>
                </div>
             </div>
+
+            {/* Ardoise Section */}
+            <div className={`rounded-lg p-3 flex justify-between items-center border ${client.balance < 0 ? 'bg-red-900/10 border-red-900/30' : 'bg-slate-800/30 border-slate-800'}`}>
+               <div className="flex items-center gap-2">
+                  <Wallet size={16} className={client.balance < 0 ? 'text-red-500' : 'text-green-500'} />
+                  <span className="text-sm text-slate-400">Ardoise / Solde</span>
+               </div>
+               <span className={`font-bold ${client.balance < 0 ? 'text-red-500' : 'text-green-500'}`}>
+                 {client.balance < 0 ? '' : '+'}{client.balance.toFixed(2)}{currency}
+               </span>
+            </div>
+
             {client.notes && (
                 <div className="mt-3 p-2 bg-yellow-500/5 rounded text-xs text-yellow-500/80 border border-yellow-500/10">
                     {client.notes}
