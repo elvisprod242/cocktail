@@ -1,5 +1,23 @@
 import { Category, Product } from './types';
 
+export const CURRENCIES = [
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'USD', symbol: '$', name: 'Dollar Américain' },
+  { code: 'XOF', symbol: 'CFA', name: 'Franc CFA (UEMOA)' },
+  { code: 'XAF', symbol: 'FCFA', name: 'Franc CFA (CEMAC)' },
+  { code: 'NGN', symbol: '₦', name: 'Naira Nigérian' },
+  { code: 'GHS', symbol: '₵', name: 'Cedi Ghanéen' },
+  { code: 'KES', symbol: 'KSh', name: 'Shilling Kényan' },
+  { code: 'ZAR', symbol: 'R', name: 'Rand Sud-Africain' },
+  { code: 'MAD', symbol: 'DH', name: 'Dirham Marocain' },
+  { code: 'DZD', symbol: 'DA', name: 'Dinar Algérien' },
+  { code: 'TND', symbol: 'DT', name: 'Dinar Tunisien' },
+  { code: 'EGP', symbol: 'E£', name: 'Livre Égyptienne' },
+  { code: 'GBP', symbol: '£', name: 'Livre Sterling' },
+  { code: 'CAD', symbol: 'C$', name: 'Dollar Canadien' },
+  { code: 'CDF', symbol: 'FC', name: 'Franc Congolais' },
+];
+
 export const INITIAL_MENU: Product[] = [
   { id: '1', name: 'Mojito', price: 10, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=1', description: 'Menthe fraîche, citron vert, rhum blanc, soda.' },
   { id: '2', name: 'Old Fashioned', price: 12, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=2', description: 'Bourbon, angostura bitters, sucre.' },

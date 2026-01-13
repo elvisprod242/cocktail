@@ -5,11 +5,12 @@ import { Order } from '../types';
 
 interface DashboardProps {
   orders: Order[];
+  currency: string;
 }
 
 type Period = 'week' | 'month' | 'year';
 
-export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ orders, currency }) => {
   const [period, setPeriod] = useState<Period>('week');
   
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
@@ -99,7 +100,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
   );
 
   return (
-    <div className="p-4 md:p-8 min-h-full bg-slate-950">
+    <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
       <h1 className="text-3xl font-bold text-white mb-8">Tableau de Bord</h1>
 
       {/* Stats Grid */}
@@ -107,7 +108,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
         <StatCard 
           icon={<DollarSign size={24} />} 
           title="Chiffre d'affaires" 
-          value={`${totalRevenue.toFixed(2)}€`}
+          value={`${totalRevenue.toFixed(2)}${currency}`}
           subtext="Total historique"
         />
         <StatCard 
@@ -119,7 +120,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
         <StatCard 
           icon={<Users size={24} />} 
           title="Panier Moyen" 
-          value={`${averageTicket.toFixed(2)}€`}
+          value={`${averageTicket.toFixed(2)}${currency}`}
         />
         <StatCard 
           icon={<TrendingUp size={24} />} 
@@ -130,7 +131,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
       </div>
 
       {/* Chart */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg h-96">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg h-96 mb-24 md:mb-0">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
           <h3 className="text-xl font-bold text-white">{getPeriodLabel()}</h3>
           <div className="flex bg-slate-800 p-1 rounded-lg">
@@ -164,7 +165,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders }) => {
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
               <XAxis dataKey="name" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} prefix="€" />
+              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} prefix={currency} />
               <Tooltip 
                 contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
                 cursor={{fill: 'rgba(255,255,255,0.05)'}}

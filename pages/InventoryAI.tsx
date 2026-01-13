@@ -25,7 +25,7 @@ export const InventoryAI: React.FC = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 min-h-full bg-slate-950 flex flex-col items-center overflow-y-auto pb-24 md:pb-8">
+    <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950 flex flex-col items-center pb-24 md:pb-8">
       <div className="max-w-3xl w-full">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center p-3 bg-bar-accent/20 rounded-full mb-4">

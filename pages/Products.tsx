@@ -1,31 +1,30 @@
-import React, { useState, useEffect } from 'react';
-import { Product, Category } from '../types';
-import { getProducts, addProduct, deleteProduct } from '../services/db';
+import React, { useState } from 'react';
+import { Product, CategoryDef } from '../types';
+import { addProduct, deleteProduct } from '../services/db';
 import { Plus, Trash2, Search, Package, X } from 'lucide-react';
+import { getIconComponent } from '../components/IconRegistry';
 
-export const Products: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
+interface ProductsPageProps {
+  products: Product[];
+  categories: CategoryDef[];
+  refreshData: () => void;
+  currency: string;
+}
+
+export const Products: React.FC<ProductsPageProps> = ({ products, categories, refreshData, currency }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Form State
   const [newName, setNewName] = useState('');
   const [newPrice, setNewPrice] = useState('');
-  const [newCategory, setNewCategory] = useState<Category>(Category.COCKTAIL);
+  const [newCategory, setNewCategory] = useState('');
   const [newDesc, setNewDesc] = useState('');
-
-  const refreshProducts = () => {
-    setProducts(getProducts());
-  };
-
-  useEffect(() => {
-    refreshProducts();
-  }, []);
 
   const handleDelete = (id: string) => {
     if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
       deleteProduct(id);
-      refreshProducts();
+      refreshData();
     }
   };
 
@@ -33,24 +32,27 @@ export const Products: React.FC = () => {
     e.preventDefault();
     if (!newName || !newPrice) return;
 
+    // Use selected category or fallback to first available
+    const catToUse = newCategory || (categories.length > 0 ? categories[0].name : 'Divers');
+
     const newProduct: Product = {
       id: Math.random().toString(36).substr(2, 9),
       name: newName,
       price: parseFloat(newPrice),
-      category: newCategory,
+      category: catToUse,
       description: newDesc,
-      image: `https://picsum.photos/200/200?random=${Date.now()}` // Image aléatoire pour la démo
+      image: `https://picsum.photos/200/200?random=${Date.now()}` // On garde la propriété pour la compatibilité, même si on ne l'affiche plus
     };
 
     addProduct(newProduct);
-    refreshProducts();
+    refreshData();
     setIsModalOpen(false);
     
     // Reset form
     setNewName('');
     setNewPrice('');
     setNewDesc('');
-    setNewCategory(Category.COCKTAIL);
+    setNewCategory('');
   };
 
   const filteredProducts = products.filter(p => 
@@ -58,8 +60,13 @@ export const Products: React.FC = () => {
     p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getCategoryIcon = (catName: string) => {
+    const cat = categories.find(c => c.name === catName);
+    return cat ? cat.icon : 'Shapes';
+  };
+
   return (
-    <div className="p-4 md:p-8 min-h-full bg-slate-950">
+    <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white flex items-center gap-3">
@@ -91,31 +98,37 @@ export const Products: React.FC = () => {
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg group">
-            <div className="relative h-48 overflow-hidden">
-               <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-               <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
-                 {product.category}
-               </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24 md:pb-0">
+        {filteredProducts.map(product => {
+          const Icon = getIconComponent(getCategoryIcon(product.category));
+          
+          return (
+            <div key={product.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-lg group flex flex-col h-full">
+              <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center group-hover:from-slate-700 group-hover:to-slate-600 transition-colors">
+                 <Icon className="text-bar-accent w-20 h-20 drop-shadow-lg transform group-hover:scale-110 transition-transform duration-300" />
+                 <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded">
+                   {product.category}
+                 </div>
+              </div>
+              <div className="p-4 flex-1 flex flex-col">
+                 <div className="flex justify-between items-start mb-2">
+                   <h3 className="font-bold text-white text-lg leading-tight">{product.name}</h3>
+                   <span className="font-bold text-bar-accent whitespace-nowrap ml-2">{product.price}{currency}</span>
+                 </div>
+                 <p className="text-slate-400 text-sm mb-4 line-clamp-2 h-10">{product.description || "Aucune description"}</p>
+                 
+                 <div className="mt-auto">
+                   <button 
+                     onClick={() => handleDelete(product.id)}
+                     className="w-full py-2 border border-slate-700 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50 transition-colors flex items-center justify-center gap-2"
+                   >
+                     <Trash2 size={16} /> Supprimer
+                   </button>
+                 </div>
+              </div>
             </div>
-            <div className="p-4">
-               <div className="flex justify-between items-start mb-2">
-                 <h3 className="font-bold text-white text-lg">{product.name}</h3>
-                 <span className="font-bold text-bar-accent">{product.price}€</span>
-               </div>
-               <p className="text-slate-400 text-sm mb-4 line-clamp-2 h-10">{product.description || "Aucune description"}</p>
-               
-               <button 
-                 onClick={() => handleDelete(product.id)}
-                 className="w-full py-2 border border-slate-700 rounded-lg text-slate-400 hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50 transition-colors flex items-center justify-center gap-2"
-               >
-                 <Trash2 size={16} /> Supprimer
-               </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add Product Modal */}
@@ -146,7 +159,7 @@ export const Products: React.FC = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-slate-400 text-sm font-medium mb-1">Prix (€)</label>
+                  <label className="block text-slate-400 text-sm font-medium mb-1">Prix ({currency})</label>
                   <input 
                     type="number" 
                     step="0.1"
@@ -161,11 +174,12 @@ export const Products: React.FC = () => {
                   <label className="block text-slate-400 text-sm font-medium mb-1">Catégorie</label>
                   <select 
                     value={newCategory}
-                    onChange={e => setNewCategory(e.target.value as Category)}
+                    onChange={e => setNewCategory(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-bar-accent outline-none"
                   >
-                    {Object.values(Category).map(c => (
-                      <option key={c} value={c}>{c}</option>
+                    <option value="" disabled>Choisir...</option>
+                    {categories.map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
                     ))}
                   </select>
                 </div>

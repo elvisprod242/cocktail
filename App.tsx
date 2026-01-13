@@ -4,10 +4,13 @@ import { Navbar } from './components/Navbar';
 import { POS } from './pages/POS';
 import { Kitchen } from './pages/Kitchen';
 import { Dashboard } from './pages/Dashboard';
-import { InventoryAI } from './pages/InventoryAI';
 import { Products } from './pages/Products';
-import { CartItem, Product, Order, OrderStatus } from './types';
-import { initDB, getProducts, getOrders, insertOrder, updateOrderStatusInDB } from './services/db';
+import { CategoriesPage } from './pages/CategoriesPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { TablesPage } from './pages/TablesPage'; 
+import { ClientsPage } from './pages/ClientsPage';
+import { CartItem, Product, Order, OrderStatus, CategoryDef, TableDef, Client } from './types';
+import { initDB, getProducts, getOrders, insertOrder, updateOrderStatusInDB, getCategories, getTables, getClients, getSetting, saveSetting } from './services/db';
 import { Loader2 } from 'lucide-react';
 
 // Helper to generate IDs without external deps
@@ -18,13 +21,16 @@ const App: React.FC = () => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<CategoryDef[]>([]);
+  const [tables, setTables] = useState<TableDef[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [currency, setCurrency] = useState('€');
 
   useEffect(() => {
     const setup = async () => {
       try {
         await initDB();
-        setOrders(getOrders());
-        setProducts(getProducts());
+        refreshData();
         setIsDbReady(true);
       } catch (e) {
         console.error("Failed to init DB", e);
@@ -36,6 +42,15 @@ const App: React.FC = () => {
   const refreshData = () => {
      setProducts(getProducts());
      setOrders(getOrders());
+     setCategories(getCategories());
+     setTables(getTables());
+     setClients(getClients());
+     setCurrency(getSetting('currency', '€'));
+  };
+
+  const updateCurrency = (newSymbol: string) => {
+    saveSetting('currency', newSymbol);
+    setCurrency(newSymbol);
   };
 
   const addToCart = (product: Product) => {
@@ -56,8 +71,11 @@ const App: React.FC = () => {
 
   const clearCart = () => setCart([]);
 
-  const placeOrder = (tableNumber: number) => {
+  const placeOrder = (tableName: string, client?: Client | null) => {
     if (cart.length === 0) return;
+
+    // Essayer de trouver le numéro si le nom est un numéro
+    const tableNumber = parseInt(tableName);
 
     const newOrder: Order = {
       id: generateId(),
@@ -65,7 +83,10 @@ const App: React.FC = () => {
       total: cart.reduce((sum, item) => sum + (item.price * item.quantity), 0),
       status: OrderStatus.PENDING,
       timestamp: Date.now(),
-      tableNumber
+      tableNumber: isNaN(tableNumber) ? undefined : tableNumber,
+      tableName: tableName,
+      clientId: client?.id,
+      clientName: client?.name
     };
 
     // Persistence SQLite
@@ -100,14 +121,23 @@ const App: React.FC = () => {
           <Routes>
             <Route 
               path="/" 
+              element={<Dashboard orders={orders} currency={currency} />} 
+            />
+            <Route 
+              path="/pos" 
               element={
                 <POS 
-                  products={products} // Pass dynamic products
+                  products={products}
+                  categories={categories}
+                  tables={tables}
+                  activeOrders={orders}
+                  clients={clients}
                   cart={cart} 
                   addToCart={addToCart} 
                   removeFromCart={removeFromCart} 
                   clearCart={clearCart}
                   placeOrder={placeOrder}
+                  currency={currency}
                 />
               } 
             />
@@ -120,17 +150,54 @@ const App: React.FC = () => {
                 />
               } 
             />
-            <Route 
-              path="/dashboard" 
-              element={<Dashboard orders={orders} />} 
+             <Route 
+              path="/clients" 
+              element={
+                <ClientsPage 
+                  clients={clients} 
+                  refreshData={refreshData} 
+                  currency={currency}
+                  orders={orders}
+                />
+              } 
             />
              <Route 
               path="/products" 
-              element={<Products />} 
+              element={
+                <Products 
+                  products={products} 
+                  categories={categories} 
+                  refreshData={refreshData} 
+                  currency={currency}
+                />
+              } 
             />
             <Route 
-              path="/ai-mixologist" 
-              element={<InventoryAI />} 
+              path="/tables" 
+              element={
+                <TablesPage 
+                  tables={tables}
+                  refreshData={refreshData}
+                />
+              } 
+            />
+            <Route 
+              path="/categories" 
+              element={
+                <CategoriesPage 
+                  categories={categories}
+                  refreshData={refreshData}
+                />
+              } 
+            />
+            <Route 
+              path="/settings" 
+              element={
+                <SettingsPage 
+                  currentCurrency={currency} 
+                  onCurrencyChange={updateCurrency} 
+                />
+              } 
             />
           </Routes>
         </main>

@@ -6,11 +6,35 @@ export enum Category {
   FOOD = 'Snacks'
 }
 
+// Nouvelle interface pour les catégories dynamiques en DB
+export interface CategoryDef {
+  id: string;
+  name: string;
+  icon: string; // Nom de l'icône Lucide
+}
+
+export interface TableDef {
+  id: string;
+  name: string;
+  zone: string; // 'Salle', 'Terrasse', 'Bar', etc.
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  phone?: string;
+  email?: string;
+  notes?: string;
+  loyaltyPoints: number;
+  totalSpent: number;
+  lastVisit?: number;
+}
+
 export interface Product {
   id: string;
   name: string;
   price: number;
-  category: Category;
+  category: string; // Changé de Category enum à string pour supporter les catégories dynamiques
   image?: string;
   description?: string;
 }
@@ -32,7 +56,10 @@ export interface Order {
   total: number;
   status: OrderStatus;
   timestamp: number;
-  tableNumber?: number;
+  tableNumber?: number; // On garde le type number pour la compatibilité, mais on stockera souvent le nom ou l'ID
+  tableName?: string; // Nouveau champ pour le nom de la table
+  clientId?: string; // Liaison optionnelle avec un client
+  clientName?: string;
 }
 
 export interface SalesData {

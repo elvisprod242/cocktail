@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Beer, ClipboardList, Sparkles, Package } from 'lucide-react';
+import { LayoutDashboard, Beer, ClipboardList, Package, Shapes, Settings, Armchair, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 export const Navbar: React.FC = () => {
@@ -8,11 +8,14 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navItems = [
-    { path: '/', label: 'Caisse', icon: <Beer size={24} /> },
-    { path: '/kitchen', label: 'Cuisine', icon: <ClipboardList size={24} /> },
-    { path: '/dashboard', label: 'Stats', icon: <LayoutDashboard size={24} /> },
+    { path: '/', label: 'Stats', icon: <LayoutDashboard size={24} /> },
+    { path: '/pos', label: 'Caisse', icon: <Beer size={24} /> },
+    { path: '/kitchen', label: 'Commande', icon: <ClipboardList size={24} /> },
+    { path: '/clients', label: 'Clients', icon: <Users size={24} /> },
+    { path: '/tables', label: 'Tables', icon: <Armchair size={24} /> },
     { path: '/products', label: 'Produits', icon: <Package size={24} /> },
-    { path: '/ai-mixologist', label: 'IA Mixo', icon: <Sparkles size={24} /> },
+    { path: '/categories', label: 'Catégories', icon: <Shapes size={24} /> },
+    { path: '/settings', label: 'Paramètres', icon: <Settings size={24} /> },
   ];
 
   return (
@@ -28,7 +31,7 @@ export const Navbar: React.FC = () => {
           </span>
         </div>
 
-        <div className="flex-1 py-8 flex flex-col gap-2 px-3">
+        <div className="flex-1 py-8 flex flex-col gap-2 px-3 overflow-y-auto">
           {navItems.map((item) => (
             <Link
               key={item.path}
@@ -47,18 +50,18 @@ export const Navbar: React.FC = () => {
       </nav>
 
       {/* Mobile Bottom Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-50 px-4 pb-safe">
-        <div className="flex justify-around items-center h-16">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-50 px-2 pb-safe">
+        <div className="flex justify-around items-center h-16 overflow-x-auto no-scrollbar">
           {navItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
-              className={`flex flex-col items-center justify-center w-full h-full space-y-1 ${
+              className={`flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 ${
                 isActive(item.path) ? 'text-bar-accent' : 'text-slate-500'
               }`}
             >
-              {item.icon}
-              <span className="text-[10px] font-medium">{item.label}</span>
+              <span className="transform scale-75">{item.icon}</span>
+              <span className="text-[9px] font-medium">{item.label}</span>
             </Link>
           ))}
         </div>
