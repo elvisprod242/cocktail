@@ -6,17 +6,16 @@ export enum Category {
   FOOD = 'Snacks'
 }
 
-// Nouvelle interface pour les catégories dynamiques en DB
 export interface CategoryDef {
   id: string;
   name: string;
-  icon: string; // Nom de l'icône Lucide
+  icon: string;
 }
 
 export interface TableDef {
   id: string;
   name: string;
-  zone: string; // 'Salle', 'Terrasse', 'Bar', etc.
+  zone: string;
 }
 
 export interface Client {
@@ -27,7 +26,7 @@ export interface Client {
   notes?: string;
   loyaltyPoints: number;
   totalSpent: number;
-  balance: number; // Nouveau: Positif = Crédit, Négatif = Dette (Ardoise)
+  balance: number;
   lastVisit?: number;
 }
 
@@ -35,9 +34,21 @@ export interface Product {
   id: string;
   name: string;
   price: number;
-  category: string; // Changé de Category enum à string pour supporter les catégories dynamiques
+  costPrice: number;
+  stock: number;
+  alertThreshold: number; // Nouveau: seuil d'alerte personnalisé
+  category: string; 
   image?: string;
   description?: string;
+  isAvailable?: boolean; 
+}
+
+export interface StockEntry {
+  id: number;
+  productId: string;
+  quantity: number;
+  timestamp: number;
+  note: string;
 }
 
 export interface CartItem extends Product {
@@ -68,7 +79,7 @@ export interface Order {
   tableName?: string; 
   clientId?: string; 
   clientName?: string;
-  paymentMethod?: PaymentMethod; // Nouveau
+  paymentMethod?: PaymentMethod; 
 }
 
 export interface SalesData {

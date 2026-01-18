@@ -1,21 +1,9 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GeneratedRecipe } from '../types';
 
-// Access API Key safely to prevent crashes in environments where process is undefined
-const getApiKey = () => {
-  try {
-    // Check if process exists before accessing env to avoid ReferenceError in browser
-    if (typeof process !== 'undefined' && process.env) {
-      return process.env.API_KEY;
-    }
-    return undefined;
-  } catch (e) {
-    console.warn("API_KEY environment variable not found");
-    return undefined;
-  }
-};
-
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Fix: Directly initialize GoogleGenAI with process.env.API_KEY as per coding guidelines
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export const generateCocktailRecipe = async (ingredients: string): Promise<GeneratedRecipe> => {
   try {

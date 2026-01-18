@@ -4,6 +4,7 @@ import { Navbar } from './components/Navbar';
 import { POS } from './pages/POS';
 import { Kitchen } from './pages/Kitchen';
 import { Dashboard } from './pages/Dashboard';
+import { ReportsPage } from './pages/ReportsPage';
 import { Products } from './pages/Products';
 import { CategoriesPage } from './pages/CategoriesPage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -12,13 +13,15 @@ import { ClientsPage } from './pages/ClientsPage';
 import { SalesHistoryPage } from './pages/SalesHistoryPage';
 import { CartItem, Product, Order, OrderStatus, CategoryDef, TableDef, Client } from './types';
 import { initDB, getProducts, getOrders, insertOrder, updateOrderStatusInDB, getCategories, getTables, getClients, getSetting, saveSetting } from './services/db';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle, RefreshCw } from 'lucide-react';
 
 // Helper to generate IDs without external deps
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
 const App: React.FC = () => {
   const [isDbReady, setIsDbReady] = useState(false);
+  const [dbError, setDbError] = useState<string | null>(null);
+  
   const [cart, setCart] = useState<CartItem[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,6 +38,7 @@ const App: React.FC = () => {
         setIsDbReady(true);
       } catch (e) {
         console.error("Failed to init DB", e);
+        setDbError("Impossible de charger la base de données SQLite. Vérifiez votre connexion internet pour le chargement initial.");
       }
     };
     setup();
@@ -111,9 +115,26 @@ const App: React.FC = () => {
   const updateOrderStatus = (orderId: string, status: OrderStatus) => {
     // Persistence SQLite
     updateOrderStatusInDB(orderId, status);
-    // Update local state
-    setOrders(getOrders());
+    // Refresh all data (including clients which might have been updated by processOrderPayment)
+    refreshData();
   };
+
+  if (dbError) {
+    return (
+      <div className="h-screen w-screen bg-slate-950 flex flex-col items-center justify-center text-white p-6 text-center">
+        <AlertTriangle className="text-red-500 mb-4" size={64} />
+        <h1 className="text-2xl font-bold mb-2">Erreur de chargement</h1>
+        <p className="text-slate-400 mb-6 max-w-md">{dbError}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold flex items-center gap-2 transition-colors"
+        >
+          <RefreshCw size={20} />
+          Réessayer
+        </button>
+      </div>
+    );
+  }
 
   if (!isDbReady) {
     return (
@@ -132,7 +153,7 @@ const App: React.FC = () => {
           <Routes>
             <Route 
               path="/" 
-              element={<Dashboard orders={orders} currency={currency} />} 
+              element={<Dashboard orders={orders} products={products} currency={currency} />} 
             />
             <Route 
               path="/pos" 
@@ -159,6 +180,7 @@ const App: React.FC = () => {
                 <Kitchen 
                   orders={orders} 
                   updateOrderStatus={updateOrderStatus} 
+                  clients={clients}
                 />
               } 
             />
@@ -167,6 +189,16 @@ const App: React.FC = () => {
               element={
                 <SalesHistoryPage 
                   orders={orders} 
+                  currency={currency}
+                />
+              } 
+            />
+             <Route 
+              path="/reports" 
+              element={
+                <ReportsPage 
+                  orders={orders} 
+                  products={products}
                   currency={currency}
                 />
               } 

@@ -24,11 +24,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, iconName, onA
           <Plus className="text-white w-8 h-8" />
         </div>
       </div>
-      <div className="p-4 flex-1 flex flex-col justify-center">
-        <div className="flex justify-between items-center gap-2">
-          <h3 className="font-bold text-slate-100 text-lg leading-tight line-clamp-2">{product.name}</h3>
-          <span className="font-bold text-bar-accent text-lg whitespace-nowrap">{product.price}{currency}</span>
-        </div>
+      <div className="p-4 flex-1 flex flex-col items-center justify-between text-center gap-3">
+        <h3 className="font-bold text-slate-100 text-base leading-tight line-clamp-2">{product.name}</h3>
+        <span className="font-bold text-bar-accent text-xl bg-slate-900/50 px-4 py-1 rounded-full border border-slate-700/50">
+            {product.price}{currency}
+        </span>
       </div>
     </div>
   );

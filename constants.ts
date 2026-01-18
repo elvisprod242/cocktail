@@ -1,3 +1,4 @@
+
 import { Category, Product } from './types';
 
 export const CURRENCIES = [
@@ -18,17 +19,18 @@ export const CURRENCIES = [
   { code: 'CDF', symbol: 'FC', name: 'Franc Congolais' },
 ];
 
+// Fix: Added missing required 'alertThreshold' property to INITIAL_MENU products to resolve build errors
 export const INITIAL_MENU: Product[] = [
-  { id: '1', name: 'Mojito', price: 10, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=1', description: 'Menthe fraîche, citron vert, rhum blanc, soda.' },
-  { id: '2', name: 'Old Fashioned', price: 12, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=2', description: 'Bourbon, angostura bitters, sucre.' },
-  { id: '3', name: 'Pinte Blonde', price: 7, category: Category.BEER, image: 'https://picsum.photos/200/200?random=3', description: 'Lager légère et rafraîchissante.' },
-  { id: '4', name: 'IPA Artisanale', price: 9, category: Category.BEER, image: 'https://picsum.photos/200/200?random=4', description: 'Notes agrumes et amertume prononcée.' },
-  { id: '5', name: 'Chardonnay', price: 8, category: Category.WINE, image: 'https://picsum.photos/200/200?random=5', description: 'Vin blanc sec et fruité.' },
-  { id: '6', name: 'Coca Cola', price: 4, category: Category.SOFT, image: 'https://picsum.photos/200/200?random=6' },
-  { id: '7', name: 'Nachos', price: 12, category: Category.FOOD, image: 'https://picsum.photos/200/200?random=7', description: 'Guacamole, salsa, fromage fondu.' },
-  { id: '8', name: 'Planche Mixte', price: 18, category: Category.FOOD, image: 'https://picsum.photos/200/200?random=8', description: 'Charcuteries et fromages affinés.' },
-  { id: '9', name: 'Espresso Martini', price: 13, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=9', description: 'Vodka, liqueur de café, espresso frais.' },
-  { id: '10', name: 'Jus d\'Orange', price: 5, category: Category.SOFT, image: 'https://picsum.photos/200/200?random=10' },
+  { id: '1', name: 'Mojito', price: 10, costPrice: 3, stock: 50, alertThreshold: 10, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=1', description: 'Menthe fraîche, citron vert, rhum blanc, soda.' },
+  { id: '2', name: 'Old Fashioned', price: 12, costPrice: 4, stock: 40, alertThreshold: 10, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=2', description: 'Bourbon, angostura bitters, sucre.' },
+  { id: '3', name: 'Pinte Blonde', price: 7, costPrice: 2, stock: 100, alertThreshold: 10, category: Category.BEER, image: 'https://picsum.photos/200/200?random=3', description: 'Lager légère et rafraîchissante.' },
+  { id: '4', name: 'IPA Artisanale', price: 9, costPrice: 3, stock: 80, alertThreshold: 10, category: Category.BEER, image: 'https://picsum.photos/200/200?random=4', description: 'Notes agrumes et amertume prononcée.' },
+  { id: '5', name: 'Chardonnay', price: 8, costPrice: 3, stock: 60, alertThreshold: 10, category: Category.WINE, image: 'https://picsum.photos/200/200?random=5', description: 'Vin blanc sec et fruité.' },
+  { id: '6', name: 'Coca Cola', price: 4, costPrice: 1, stock: 120, alertThreshold: 10, category: Category.SOFT, image: 'https://picsum.photos/200/200?random=6' },
+  { id: '7', name: 'Nachos', price: 12, costPrice: 4, stock: 30, alertThreshold: 5, category: Category.FOOD, image: 'https://picsum.photos/200/200?random=7', description: 'Guacamole, salsa, fromage fondu.' },
+  { id: '8', name: 'Planche Mixte', price: 18, costPrice: 8, stock: 20, alertThreshold: 5, category: Category.FOOD, image: 'https://picsum.photos/200/200?random=8', description: 'Charcuteries et fromages affinés.' },
+  { id: '9', name: 'Espresso Martini', price: 13, costPrice: 5, stock: 35, alertThreshold: 10, category: Category.COCKTAIL, image: 'https://picsum.photos/200/200?random=9', description: 'Vodka, liqueur de café, espresso frais.' },
+  { id: '10', name: 'Jus d\'Orange', price: 5, costPrice: 1.5, stock: 60, alertThreshold: 10, category: Category.SOFT, image: 'https://picsum.photos/200/200?random=10' },
 ];
 
 export const MOCK_SALES_DATA_WEEK = [

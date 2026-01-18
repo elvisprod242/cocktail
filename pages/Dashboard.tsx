@@ -1,183 +1,405 @@
 import React, { useState, useMemo } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { TrendingUp, DollarSign, Users, Beer } from 'lucide-react';
-import { Order } from '../types';
+import { 
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+  BarChart, Bar, PieChart, Pie, Cell, Legend
+} from 'recharts';
+import { TrendingUp, DollarSign, ShoppingBag, Award, Clock, CalendarRange, ArrowUpRight } from 'lucide-react';
+import { Order, Product } from '../types';
 
 interface DashboardProps {
   orders: Order[];
+  products: Product[];
   currency: string;
 }
 
 type Period = 'week' | 'month' | 'year';
 
-export const Dashboard: React.FC<DashboardProps> = ({ orders, currency }) => {
+const COLORS = ['#e94560', '#533483', '#0f3460', '#16213e', '#22a6b3', '#f0932b'];
+
+export const Dashboard: React.FC<DashboardProps> = ({ orders, products, currency }) => {
   const [period, setPeriod] = useState<Period>('week');
   
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  const totalOrders = orders.length;
-  const averageTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-
-  // Calcul dynamique des données du graphique basé sur les commandes réelles
-  const chartData = useMemo(() => {
+  // --- HELPERS DATA ---
+  
+  // 1. Filter Orders by Period
+  const filteredOrders = useMemo(() => {
     const now = new Date();
-    let data: { name: string; value: number; sortKey: number }[] = [];
+    return orders.filter(order => {
+        const d = new Date(order.timestamp);
+        if (period === 'week') {
+            const sevenDaysAgo = new Date();
+            sevenDaysAgo.setDate(now.getDate() - 7);
+            return d >= sevenDaysAgo;
+        } else if (period === 'month') {
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        } else {
+            return d.getFullYear() === now.getFullYear();
+        }
+    });
+  }, [orders, period]);
+
+  // 2. Global KPIs
+  const totalRevenue = filteredOrders.reduce((sum, order) => sum + order.total, 0);
+  const totalOrders = filteredOrders.length;
+  const averageTicket = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  
+  // Find Best Selling Day
+  const bestDay = useMemo(() => {
+      const days: Record<string, number> = {};
+      filteredOrders.forEach(o => {
+          const day = new Date(o.timestamp).toLocaleDateString('fr-FR', { weekday: 'long' });
+          days[day] = (days[day] || 0) + o.total;
+      });
+      const entries = Object.entries(days);
+      if (entries.length === 0) return 'N/A';
+      return entries.sort((a,b) => b[1] - a[1])[0][0]; // [dayName, value]
+  }, [filteredOrders]);
+
+
+  // 3. Chart Data: Revenue over Time (Area Chart)
+  const revenueData = useMemo(() => {
+    const dataMap = new Map<string, number>();
+    const now = new Date();
+    const result: any[] = [];
 
     if (period === 'week') {
-      // 7 derniers jours
-      const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-      // Initialiser map
-      const stats = new Map();
+      // Initialize last 7 days
       for (let i = 6; i >= 0; i--) {
         const d = new Date();
         d.setDate(now.getDate() - i);
-        const dayName = days[d.getDay()];
-        stats.set(dayName, 0);
-        // Ajoutons une clé de tri simple pour l'ordre d'affichage si nécessaire, 
-        // ici on se base sur l'ordre d'insertion dans le tableau final
-        data.push({ name: dayName, value: 0, sortKey: d.getTime() });
+        const label = d.toLocaleDateString('fr-FR', { weekday: 'short' });
+        dataMap.set(label, 0);
+        result.push({ name: label, value: 0, fullDate: d.toDateString() });
       }
-
-      orders.forEach(order => {
-        const d = new Date(order.timestamp);
-        // Filtre simple: est-ce dans les 7 derniers jours ?
-        const diffTime = Math.abs(now.getTime() - d.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-        
-        if (diffDays <= 7) {
-            const dayName = days[d.getDay()];
-            const idx = data.findIndex(i => i.name === dayName);
-            if (idx !== -1) data[idx].value += order.total;
-        }
+      
+      filteredOrders.forEach(o => {
+         const d = new Date(o.timestamp);
+         const label = d.toLocaleDateString('fr-FR', { weekday: 'short' });
+         const existingIndex = result.findIndex(r => r.name === label);
+         if (existingIndex !== -1) result[existingIndex].value += o.total;
       });
+
     } else if (period === 'month') {
-        // 4 dernières semaines (simplifié)
-        for (let i = 1; i <= 4; i++) {
-           data.push({ name: `Sem ${i}`, value: 0, sortKey: i });
+        // Group by day of month
+        const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+        for (let i = 1; i <= daysInMonth; i++) {
+             result.push({ name: `${i}`, value: 0 });
         }
-        // Logic de répartition simplifiée
-        orders.forEach(order => {
-             // Simuler une répartition pour la démo si les dates sont toutes aujourd'hui
-             // En prod, utiliser num semaine réelle
-             data[3].value += order.total; 
+        filteredOrders.forEach(o => {
+            const d = new Date(o.timestamp);
+            const day = d.getDate();
+            if (result[day - 1]) result[day - 1].value += o.total;
         });
     } else {
-        // Année (Mois)
+        // Year
         const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-        months.forEach((m, i) => data.push({ name: m, value: 0, sortKey: i }));
-        
-        orders.forEach(order => {
-            const d = new Date(order.timestamp);
-            if (d.getFullYear() === now.getFullYear()) {
-                data[d.getMonth()].value += order.total;
-            }
+        months.forEach(m => result.push({ name: m, value: 0 }));
+        filteredOrders.forEach(o => {
+            const m = new Date(o.timestamp).getMonth();
+            result[m].value += o.total;
         });
     }
+    return result;
+  }, [filteredOrders, period]);
 
-    return data;
-  }, [orders, period]);
+  // 4. Chart Data: Sales by Category (Pie Chart)
+  const categoryData = useMemo(() => {
+    const stats: Record<string, number> = {};
+    
+    filteredOrders.forEach(order => {
+        order.items.forEach(item => {
+            // Find product to get true category (as item might not have it saved in old DB versions)
+            const product = products.find(p => p.name === item.name);
+            const cat = product ? product.category : 'Autre';
+            stats[cat] = (stats[cat] || 0) + (item.price * item.quantity);
+        });
+    });
 
-  const getPeriodLabel = () => {
-    switch (period) {
-      case 'month': return 'Revenus Mensuels';
-      case 'year': return 'Revenus Annuels';
-      default: return 'Revenus Hebdomadaires';
-    }
-  };
+    return Object.entries(stats)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+  }, [filteredOrders, products]);
 
-  const StatCard = ({ icon, title, value, subtext }: any) => (
-    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-slate-400 text-sm font-medium mb-1">{title}</p>
-          <h3 className="text-2xl font-bold text-white">{value}</h3>
-          {subtext && <p className="text-green-400 text-xs mt-2 flex items-center gap-1"><TrendingUp size={12} /> {subtext}</p>}
+  // 5. Chart Data: Busy Hours (Bar Chart)
+  const hourlyData = useMemo(() => {
+      const hours = new Array(24).fill(0).map((_, i) => ({ name: `${i}h`, value: 0 }));
+      filteredOrders.forEach(o => {
+          const h = new Date(o.timestamp).getHours();
+          hours[h].value += 1; // Count orders, could be revenue
+      });
+      // Filter only active hours (e.g. 10am to 2am) to avoid empty chart space if desired, 
+      // but showing 24h gives perspective. Let's just strip leading zeros if needed.
+      return hours; 
+  }, [filteredOrders]);
+
+  // 6. Top Products List
+  const topProducts = useMemo(() => {
+      const counts: Record<string, { qty: number, revenue: number }> = {};
+      filteredOrders.forEach(o => {
+          o.items.forEach(item => {
+              if (!counts[item.name]) counts[item.name] = { qty: 0, revenue: 0 };
+              counts[item.name].qty += item.quantity;
+              counts[item.name].revenue += (item.price * item.quantity);
+          });
+      });
+      
+      return Object.entries(counts)
+        .map(([name, data]) => ({ name, ...data }))
+        .sort((a, b) => b.qty - a.qty)
+        .slice(0, 5);
+  }, [filteredOrders]);
+
+
+  // --- UI COMPONENTS ---
+
+  const StatCard = ({ title, value, icon: Icon, sub, subColor = "text-green-400" }: any) => (
+    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-lg relative overflow-hidden group">
+      <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity transform group-hover:scale-110 duration-500">
+         <Icon size={80} />
+      </div>
+      <div className="relative z-10">
+        <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-slate-800 rounded-lg text-bar-accent">
+                <Icon size={20} />
+            </div>
+            <p className="text-slate-400 text-sm font-medium">{title}</p>
         </div>
-        <div className="p-3 bg-slate-800 rounded-xl text-bar-accent">
-          {icon}
-        </div>
+        <h3 className="text-3xl font-bold text-white mb-1">{value}</h3>
+        {sub && <p className={`text-xs ${subColor} flex items-center gap-1`}>{sub}</p>}
       </div>
     </div>
   );
 
   return (
-    <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
-      <h1 className="text-3xl font-bold text-white mb-8">Tableau de Bord</h1>
+    <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950 scrollbar-thin scrollbar-thumb-slate-800">
+      
+      {/* Header & Controls */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
+            <p className="text-slate-400 mt-1">Vision globale de la performance de votre établissement</p>
+        </div>
+        
+        <div className="bg-slate-900 p-1.5 rounded-xl border border-slate-800 flex items-center">
+            {(['week', 'month', 'year'] as Period[]).map((p) => (
+                <button
+                    key={p}
+                    onClick={() => setPeriod(p)}
+                    className={`
+                        px-4 py-2 rounded-lg text-sm font-bold transition-all
+                        ${period === p 
+                            ? 'bg-bar-accent text-white shadow-lg shadow-bar-accent/20' 
+                            : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                        }
+                    `}
+                >
+                    {p === 'week' ? '7 Jours' : p === 'month' ? 'Mois' : 'Année'}
+                </button>
+            ))}
+        </div>
+      </div>
 
-      {/* Stats Grid */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard 
-          icon={<DollarSign size={24} />} 
-          title="Chiffre d'affaires" 
-          value={`${totalRevenue.toFixed(2)}${currency}`}
-          subtext="Total historique"
+          title="Chiffre d'Affaires" 
+          value={`${totalRevenue.toFixed(2)}${currency}`} 
+          icon={DollarSign}
+          sub={totalRevenue > 0 ? "+ Croissance active" : "Aucune donnée"}
+          subColor="text-green-400"
         />
         <StatCard 
-          icon={<Beer size={24} />} 
-          title="Commandes" 
+          title="Commandes Totales" 
           value={totalOrders} 
-          subtext="Enregistrées en DB"
+          icon={ShoppingBag}
+          sub={`${(totalOrders / (period === 'week' ? 7 : 30)).toFixed(1)} / jour moy.`}
+          subColor="text-blue-400"
         />
         <StatCard 
-          icon={<Users size={24} />} 
           title="Panier Moyen" 
-          value={`${averageTicket.toFixed(2)}${currency}`}
+          value={`${averageTicket.toFixed(2)}${currency}`} 
+          icon={TrendingUp}
+          sub="Par commande"
+          subColor="text-purple-400"
         />
         <StatCard 
-          icon={<TrendingUp size={24} />} 
-          title="Performance" 
-          value={totalOrders > 0 ? "Active" : "En attente"} 
-          subtext={period === 'week' ? 'Vue 7j' : 'Vue globale'}
+          title="Meilleur Jour" 
+          value={bestDay.charAt(0).toUpperCase() + bestDay.slice(1)} 
+          icon={CalendarRange}
+          sub="Pic d'activité"
+          subColor="text-orange-400"
         />
       </div>
 
-      {/* Chart */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg h-96 mb-24 md:mb-0">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
-          <h3 className="text-xl font-bold text-white">{getPeriodLabel()}</h3>
-          <div className="flex bg-slate-800 p-1 rounded-lg">
-            <button
-              onClick={() => setPeriod('week')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${period === 'week' ? 'bg-bar-accent text-white shadow' : 'text-slate-400 hover:text-white'}`}
-            >
-              Semaine
-            </button>
-            <button
-              onClick={() => setPeriod('month')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${period === 'month' ? 'bg-bar-accent text-white shadow' : 'text-slate-400 hover:text-white'}`}
-            >
-              Mois
-            </button>
-            <button
-              onClick={() => setPeriod('year')}
-              className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${period === 'year' ? 'bg-bar-accent text-white shadow' : 'text-slate-400 hover:text-white'}`}
-            >
-              Année
-            </button>
-          </div>
-        </div>
+      {/* Main Charts Area */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {totalOrders === 0 ? (
-          <div className="h-full flex items-center justify-center text-slate-500">
-            <p>Aucune donnée disponible. Passez une commande !</p>
+        {/* Revenue Area Chart (Takes 2/3 width) */}
+        <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col h-[400px]">
+             <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <TrendingUp size={20} className="text-bar-accent" />
+                    Évolution du Chiffre d'Affaires
+                </h3>
+             </div>
+             
+             <div className="flex-1 w-full min-h-0">
+                <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                            <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#e94560" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#e94560" stopOpacity={0}/>
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                        <XAxis 
+                            dataKey="name" 
+                            stroke="#94a3b8" 
+                            tick={{fill: '#94a3b8', fontSize: 12}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            dy={10}
+                        />
+                        <YAxis 
+                            stroke="#94a3b8" 
+                            tick={{fill: '#94a3b8', fontSize: 12}} 
+                            axisLine={false} 
+                            tickLine={false} 
+                            tickFormatter={(value) => `${value}${currency}`}
+                        />
+                        <Tooltip 
+                            contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', color: '#f8fafc', borderRadius: '8px' }}
+                            itemStyle={{ color: '#e94560' }}
+                            formatter={(value: number) => [`${value.toFixed(2)}${currency}`, "Revenu"]}
+                        />
+                        <Area 
+                            type="monotone" 
+                            dataKey="value" 
+                            stroke="#e94560" 
+                            strokeWidth={3}
+                            fillOpacity={1} 
+                            fill="url(#colorRevenue)" 
+                            activeDot={{ r: 6, strokeWidth: 0, fill: '#fff' }}
+                        />
+                    </AreaChart>
+                </ResponsiveContainer>
+             </div>
+        </div>
+
+        {/* Top Products List (Takes 1/3 width) */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col h-[400px]">
+            <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-6">
+                <Award size={20} className="text-yellow-500" />
+                Top 5 Produits
+            </h3>
+            <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                {topProducts.length === 0 ? (
+                    <div className="h-full flex items-center justify-center text-slate-500 italic">Aucune donnée</div>
+                ) : (
+                    topProducts.map((prod, index) => (
+                        <div key={prod.name} className="flex items-center p-3 bg-slate-800/50 rounded-xl border border-slate-800">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${index === 0 ? 'bg-yellow-500 text-black' : index === 1 ? 'bg-slate-400 text-black' : index === 2 ? 'bg-orange-700 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                                {index + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-white font-medium truncate">{prod.name}</p>
+                                <p className="text-xs text-slate-400">{prod.qty} vendus</p>
+                            </div>
+                            <div className="font-bold text-bar-accent text-sm">
+                                {prod.revenue.toFixed(0)}{currency}
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+            <button className="w-full mt-4 py-2 text-sm text-slate-400 hover:text-white border border-slate-700 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center gap-2">
+                Voir tout le classement <ArrowUpRight size={14} />
+            </button>
+        </div>
+      </div>
+
+      {/* Secondary Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-24 md:pb-6">
+          
+          {/* Category Distribution */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg h-[350px] flex flex-col">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
+                    <ShoppingBag size={20} className="text-blue-500" />
+                    Répartition par Catégorie
+               </h3>
+               <div className="flex-1 w-full min-h-0 flex items-center justify-center">
+                    {categoryData.length === 0 ? (
+                        <p className="text-slate-500">Pas assez de données</p>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={categoryData}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={60}
+                                    outerRadius={100}
+                                    paddingAngle={5}
+                                    dataKey="value"
+                                >
+                                    {categoryData.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
+                                    formatter={(value: number) => `${value.toFixed(2)}${currency}`}
+                                    contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#fff' }} 
+                                />
+                                <Legend 
+                                    verticalAlign="middle" 
+                                    align="right" 
+                                    layout="vertical" 
+                                    iconType="circle"
+                                />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    )}
+               </div>
           </div>
-        ) : (
-          <ResponsiveContainer width="100%" height="80%">
-            <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-              <XAxis dataKey="name" stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} />
-              <YAxis stroke="#94a3b8" tick={{fill: '#94a3b8'}} axisLine={false} tickLine={false} prefix={currency} />
-              <Tooltip 
-                contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }}
-                cursor={{fill: 'rgba(255,255,255,0.05)'}}
-              />
-              <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={'#e94560'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
+
+          {/* Hourly Traffic */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg h-[350px] flex flex-col">
+               <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                    <Clock size={20} className="text-purple-500" />
+                    Affluence Horaire
+               </h3>
+               <div className="flex-1 w-full min-h-0">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={hourlyData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                            <XAxis 
+                                dataKey="name" 
+                                stroke="#94a3b8" 
+                                tick={{fill: '#94a3b8', fontSize: 10}} 
+                                axisLine={false} 
+                                tickLine={false} 
+                            />
+                            <YAxis 
+                                stroke="#94a3b8" 
+                                tick={{fill: '#94a3b8', fontSize: 10}} 
+                                axisLine={false} 
+                                tickLine={false} 
+                            />
+                            <Tooltip 
+                                cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                                contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#fff' }}
+                            />
+                            <Bar dataKey="value" fill="#8884d8" radius={[4, 4, 0, 0]}>
+                                {hourlyData.map((entry, index) => (
+                                    <Cell key={`cell-${index}`} fill={entry.value > 0 ? '#e94560' : '#1e293b'} />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ResponsiveContainer>
+               </div>
+          </div>
+
       </div>
     </div>
   );

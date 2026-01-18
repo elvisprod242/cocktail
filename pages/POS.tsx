@@ -56,10 +56,25 @@ export const POS: React.FC<POSProps> = ({
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
+  const isTableOccupied = (tableName: string) => {
+    return activeOrders.some(o => o.tableName === tableName && o.status !== 'Payé');
+  };
+
+  const handleOpenTableSelector = () => {
+    if (!selectedTable) {
+        // Recherche de la première table disponible
+        const firstAvailable = tables.find(t => !isTableOccupied(t.name));
+        if (firstAvailable) {
+            setSelectedTable(firstAvailable.name);
+        }
+    }
+    setShowTableSelector(true);
+  };
+
   const handlePlaceOrder = () => {
     if (cart.length === 0) return;
     if (!selectedTable) {
-        setShowTableSelector(true);
+        handleOpenTableSelector();
         return;
     }
     placeOrder(selectedTable, selectedClient);
@@ -81,10 +96,6 @@ export const POS: React.FC<POSProps> = ({
         return acc;
     }, {} as Record<string, TableDef[]>);
   }, [tables]);
-
-  const isTableOccupied = (tableName: string) => {
-      return activeOrders.some(o => o.tableName === tableName && o.status !== 'Payé');
-  };
 
   return (
     <div className="h-full flex flex-col md:flex-row overflow-hidden bg-slate-950">
@@ -157,7 +168,7 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Cart Sidebar */}
       <div className={`
-        fixed inset-0 z-40 md:static md:z-0 md:w-96 bg-slate-900 border-l border-slate-800 flex flex-col transition-transform duration-300 transform
+        fixed inset-0 z-[60] md:static md:z-0 md:w-96 bg-slate-900 border-l border-slate-800 flex flex-col transition-transform duration-300 transform
         ${isCartOpen ? 'translate-y-0' : 'translate-y-[100%] md:translate-y-0'}
       `}>
          {/* Mobile Handle */}
@@ -173,7 +184,7 @@ export const POS: React.FC<POSProps> = ({
              </div>
              
              <button 
-              onClick={() => setShowTableSelector(true)}
+              onClick={handleOpenTableSelector}
               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 selectedTable ? 'bg-bar-accent text-white' : 'bg-slate-800 text-slate-400 hover:text-white'
               }`}
@@ -277,7 +288,7 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Table Selector Modal */}
       {showTableSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <div className="p-6 border-b border-slate-800 flex justify-between items-center">
               <h2 className="text-2xl font-bold text-white flex items-center gap-2">
@@ -344,7 +355,7 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Client Selector Modal */}
       {showClientSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-slate-800 w-full max-w-md max-h-[70vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col">
               <div className="p-4 border-b border-slate-800 flex justify-between items-center">
                   <h2 className="text-xl font-bold text-white flex items-center gap-2">
