@@ -1,4 +1,5 @@
-import { Product, Order, OrderStatus, CartItem, CategoryDef, Category, TableDef, Client, PaymentMethod, StockEntry } from '../types';
+
+import { Product, Order, OrderStatus, CartItem, CategoryDef, Category, TableDef, TableStatus, Client, PaymentMethod, StockEntry, User, UserRole } from '../types';
 import { INITIAL_MENU } from '../constants';
 
 let db: any = null;
@@ -58,32 +59,24 @@ const createTables = () => {
     stock INTEGER DEFAULT 0, alert_threshold INTEGER DEFAULT 5, 
     category TEXT, image TEXT, description TEXT, is_available INTEGER DEFAULT 1
   );`);
-  db.run(`CREATE TABLE IF NOT EXISTS stock_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, quantity INTEGER, 
-    timestamp INTEGER, note TEXT
-  );`);
   db.run(`CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, total REAL, status TEXT, timestamp INTEGER, table_number INTEGER, table_name TEXT, client_id TEXT, client_name TEXT, payment_method TEXT);`);
   db.run(`CREATE TABLE IF NOT EXISTS order_items (id INTEGER PRIMARY KEY AUTOINCREMENT, order_id TEXT, name TEXT, price REAL, cost_price REAL DEFAULT 0, quantity INTEGER, FOREIGN KEY(order_id) REFERENCES orders(id));`);
-  db.run(`CREATE TABLE IF NOT EXISTS tables (id TEXT PRIMARY KEY, name TEXT, zone TEXT);`);
+  db.run(`CREATE TABLE IF NOT EXISTS tables (id TEXT PRIMARY KEY, name TEXT, zone TEXT, status TEXT DEFAULT 'FREE', reservation_note TEXT);`);
   db.run(`CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, name TEXT, phone TEXT, email TEXT, notes TEXT, loyalty_points INTEGER DEFAULT 0, total_spent REAL DEFAULT 0, balance REAL DEFAULT 0, last_visit INTEGER);`);
+  db.run(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, role TEXT, pin TEXT);`);
   db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);`);
+  db.run(`CREATE TABLE IF NOT EXISTS stock_history (id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, quantity INTEGER, timestamp INTEGER, note TEXT);`);
 };
 
 const applyMigrations = () => {
-    try { db.run("ALTER TABLE products ADD COLUMN alert_threshold INTEGER DEFAULT 5"); } catch (e) {}
-    try { db.run("ALTER TABLE clients ADD COLUMN balance REAL DEFAULT 0"); } catch (e) {}
-    try { db.run("ALTER TABLE orders ADD COLUMN payment_method TEXT"); } catch (e) {}
-    try { db.run("ALTER TABLE products ADD COLUMN is_available INTEGER DEFAULT 1"); } catch (e) {}
-    try { db.run("ALTER TABLE products ADD COLUMN stock INTEGER DEFAULT 0"); } catch (e) {}
     try { db.run("ALTER TABLE products ADD COLUMN cost_price REAL DEFAULT 0"); } catch (e) {}
     try { db.run("ALTER TABLE order_items ADD COLUMN cost_price REAL DEFAULT 0"); } catch (e) {}
-    try { db.run(`CREATE TABLE IF NOT EXISTS stock_history (id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, quantity INTEGER, timestamp INTEGER, note TEXT);`); } catch (e) {}
+    try { db.run("ALTER TABLE tables ADD COLUMN status TEXT DEFAULT 'FREE'"); } catch (e) {}
+    try { db.run("ALTER TABLE tables ADD COLUMN reservation_note TEXT"); } catch (e) {}
+    try { db.run("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, role TEXT, pin TEXT);"); } catch (e) {}
     
-    try {
-        db.run("UPDATE clients SET total_spent = 0 WHERE total_spent IS NULL");
-        db.run("UPDATE clients SET balance = 0 WHERE balance IS NULL");
-        db.run("UPDATE clients SET loyalty_points = 0 WHERE loyalty_points IS NULL");
-    } catch (e) {}
+    // Auto-fix table status based on orders
+    db.run(`UPDATE tables SET status = 'OCCUPIED' WHERE name IN (SELECT table_name FROM orders WHERE status != 'Payé')`);
 };
 
 const seedData = () => {
@@ -104,17 +97,60 @@ const seedData = () => {
   });
   stmt.free();
 
-  const tableStmt = db.prepare("INSERT INTO tables VALUES (?, ?, ?)");
+  const tableStmt = db.prepare("INSERT INTO tables (id, name, zone, status) VALUES (?, ?, ?, ?)");
   const defaultTables = [
-    { id: 't1', name: '1', zone: 'Salle' }, { id: 't2', name: '2', zone: 'Salle' },
-    { id: 't3', name: '3', zone: 'Salle' }, { id: 't4', name: '4', zone: 'Salle' },
-    { id: 't10', name: '10', zone: 'Terrasse' }, { id: 't11', name: '11', zone: 'Terrasse' },
-    { id: 't12', name: '12', zone: 'Terrasse' }, { id: 't20', name: 'Bar 1', zone: 'Bar' },
-    { id: 't21', name: 'Bar 2', zone: 'Bar' },
+    { id: 't1', name: 'S1', zone: 'Salle', status: 'FREE' },
+    { id: 't2', name: 'S2', zone: 'Salle', status: 'FREE' },
+    { id: 't10', name: 'T1', zone: 'Terrasse', status: 'FREE' },
+    { id: 't20', name: 'Bar 1', zone: 'Bar', status: 'FREE' },
+    { id: 't30', name: 'VIP A', zone: 'VIP', status: 'FREE' },
   ];
-  defaultTables.forEach(t => tableStmt.run([t.id, t.name, t.zone]));
+  defaultTables.forEach(t => tableStmt.run([t.id, t.name, t.zone, t.status]));
   tableStmt.free();
+
+  // Seed Users
+  const userStmt = db.prepare("INSERT INTO users (id, name, role, pin) VALUES (?, ?, ?, ?)");
+  const defaultUsers = [
+    { id: 'u1', name: 'Direction', role: UserRole.ADMIN, pin: '0000' },
+    { id: 'u2', name: 'Barman', role: UserRole.BARTENDER, pin: '1234' },
+    { id: 'u3', name: 'Serveur', role: UserRole.SERVER, pin: '5678' },
+  ];
+  defaultUsers.forEach(u => userStmt.run([u.id, u.name, u.role, u.pin]));
+  userStmt.free();
+
   db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ['currency', '€']);
+};
+
+export const getUsers = (): User[] => {
+  if (!db) return [];
+  try {
+    const stmt = db.prepare("SELECT * FROM users");
+    const users: User[] = [];
+    while (stmt.step()) {
+      const row = stmt.getAsObject();
+      users.push({ id: row.id, name: row.name, role: row.role as UserRole, pin: row.pin });
+    }
+    stmt.free();
+    return users;
+  } catch (e) { return []; }
+};
+
+export const addUser = (user: User) => {
+  if (!db) return;
+  db.run("INSERT INTO users (id, name, role, pin) VALUES (?, ?, ?, ?)", [user.id, user.name, user.role, user.pin || '']);
+  saveDB();
+};
+
+export const updateUser = (user: User) => {
+  if (!db) return;
+  db.run("UPDATE users SET name = ?, role = ?, pin = ? WHERE id = ?", [user.name, user.role, user.pin || '', user.id]);
+  saveDB();
+};
+
+export const deleteUser = (id: string) => {
+  if (!db) return;
+  db.run("DELETE FROM users WHERE id = ?", [id]);
+  saveDB();
 };
 
 export const resetDatabase = () => {
@@ -172,7 +208,9 @@ export const addClient = (client: Client) => {
 
 export const updateClient = (client: Client) => {
   if (!db) return;
-  db.run("UPDATE clients SET name = ?, phone = ?, email = ?, notes = ? WHERE id = ?", [client.name, client.phone, client.email, client.notes, client.id]);
+  db.run("UPDATE clients SET name = ?, phone = ?, email = ?, notes = ? WHERE id = ?", [
+    client.name, client.phone || '', client.email || '', client.notes || '', client.id
+  ]);
   saveDB();
 };
 
@@ -195,7 +233,13 @@ export const getTables = (): TableDef[] => {
     const tables: TableDef[] = [];
     while (stmt.step()) {
       const row = stmt.getAsObject();
-      tables.push({ id: row.id, name: row.name, zone: row.zone });
+      tables.push({ 
+        id: row.id, 
+        name: row.name, 
+        zone: row.zone, 
+        status: row.status as TableStatus,
+        reservationNote: row.reservation_note
+      });
     }
     stmt.free();
     return tables;
@@ -204,7 +248,13 @@ export const getTables = (): TableDef[] => {
 
 export const addTable = (table: TableDef) => {
   if (!db) return;
-  db.run("INSERT INTO tables VALUES (?, ?, ?)", [table.id, table.name, table.zone]);
+  db.run("INSERT INTO tables (id, name, zone, status) VALUES (?, ?, ?, ?)", [table.id, table.name, table.zone, TableStatus.FREE]);
+  saveDB();
+};
+
+export const updateTableStatus = (tableName: string, status: TableStatus, note: string = '') => {
+  if (!db) return;
+  db.run("UPDATE tables SET status = ?, reservation_note = ? WHERE name = ?", [status, note, tableName]);
   saveDB();
 };
 
@@ -228,7 +278,7 @@ export const getCategories = (): CategoryDef[] => {
 
 export const addCategory = (category: CategoryDef) => {
   if (!db) return;
-  db.run("INSERT INTO categories VALUES (?, ?, ?)", [category.id, category.name, category.icon]);
+  db.run("INSERT INTO categories (id, name, icon) VALUES (?, ?, ?)", [category.id, category.name, category.icon]);
   saveDB();
 };
 
@@ -258,8 +308,7 @@ export const getProducts = (): Product[] => {
 export const addProduct = (product: Product) => {
   if (!db) return;
   db.run("INSERT INTO products (id, name, price, cost_price, stock, alert_threshold, category, image, description, is_available) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [
-    product.id, product.name, product.price, product.costPrice || 0, product.stock || 0, 
-    product.alertThreshold || 5, product.category, product.image || '', product.description || '', product.isAvailable ? 1 : 0
+    product.id, product.name, product.price, product.costPrice, product.stock, product.alertThreshold, product.category, product.image || '', product.description || '', product.isAvailable !== false ? 1 : 0
   ]);
   saveDB();
 };
@@ -267,9 +316,14 @@ export const addProduct = (product: Product) => {
 export const updateProduct = (product: Product) => {
   if (!db) return;
   db.run("UPDATE products SET name = ?, price = ?, cost_price = ?, stock = ?, alert_threshold = ?, category = ?, image = ?, description = ?, is_available = ? WHERE id = ?", [
-    product.name, product.price, product.costPrice, product.stock, product.alertThreshold, 
-    product.category, product.image, product.description, product.isAvailable ? 1 : 0, product.id
+    product.name, product.price, product.costPrice, product.stock, product.alertThreshold, product.category, product.image || '', product.description || '', product.isAvailable !== false ? 1 : 0, product.id
   ]);
+  saveDB();
+};
+
+export const deleteProduct = (id: string) => {
+  if (!db) return;
+  db.run("DELETE FROM products WHERE id = ?", [id]);
   saveDB();
 };
 
@@ -296,12 +350,6 @@ export const getStockHistory = (productId: string): StockEntry[] => {
     }
     stmt.free();
     return entries;
-};
-
-export const deleteProduct = (id: string) => {
-  if (!db) return;
-  db.run("DELETE FROM products WHERE id = ?", [id]);
-  saveDB();
 };
 
 export const getOrders = (): Order[] => {
@@ -352,6 +400,10 @@ export const insertOrder = (order: Order) => {
   });
   stmt.free();
   stockStmt.free();
+  
+  // Mark table as occupied
+  db.run("UPDATE tables SET status = 'OCCUPIED' WHERE name = ?", [order.tableName]);
+  
   saveDB();
 };
 
@@ -365,6 +417,16 @@ export const processOrderPayment = (orderId: string, method: PaymentMethod, tota
     if (!db) return;
     const numericTotal = Number(total);
     db.run("UPDATE orders SET status = ?, payment_method = ? WHERE id = ?", [OrderStatus.PAID, method, orderId]);
+    
+    // Free the table
+    const stmt = db.prepare("SELECT table_name FROM orders WHERE id = ?");
+    stmt.bind([orderId]);
+    if (stmt.step()) {
+        const row = stmt.getAsObject();
+        db.run("UPDATE tables SET status = 'FREE' WHERE name = ?", [row.table_name]);
+    }
+    stmt.free();
+
     if (clientId) {
         let sql = `UPDATE clients SET total_spent = total_spent + ?, loyalty_points = loyalty_points + ?, last_visit = ?`;
         const pointsEarned = Math.floor(numericTotal / 10);

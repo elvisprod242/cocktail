@@ -1,3 +1,31 @@
+export enum UserRole {
+  ADMIN = 'ADMIN',
+  BARTENDER = 'BARTENDER',
+  SERVER = 'SERVER'
+}
+
+export interface User {
+  id: string;
+  name: string;
+  role: UserRole;
+  pin?: string;
+}
+
+export enum TableStatus {
+  FREE = 'FREE',
+  OCCUPIED = 'OCCUPIED',
+  RESERVED = 'RESERVED'
+}
+
+export interface TableDef {
+  id: string;
+  name: string;
+  zone: string;
+  status: TableStatus;
+  reservationNote?: string;
+  currentOrderId?: string;
+}
+
 export enum Category {
   COCKTAIL = 'Cocktails',
   BEER = 'Bières',
@@ -10,12 +38,6 @@ export interface CategoryDef {
   id: string;
   name: string;
   icon: string;
-}
-
-export interface TableDef {
-  id: string;
-  name: string;
-  zone: string;
 }
 
 export interface Client {
@@ -36,7 +58,7 @@ export interface Product {
   price: number;
   costPrice: number;
   stock: number;
-  alertThreshold: number; // Nouveau: seuil d'alerte personnalisé
+  alertThreshold: number; 
   category: string; 
   image?: string;
   description?: string;
