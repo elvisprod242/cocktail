@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Order, OrderStatus, PaymentMethod, Client } from '../types';
 import { CheckCircle, Clock, Bell, Wallet, CreditCard, Banknote, Smartphone, Calculator, X, User, Printer, ArrowRight, ArrowDown } from 'lucide-react';
@@ -14,7 +15,7 @@ export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, cli
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [successPaymentOrder, setSuccessPaymentOrder] = useState<Order | null>(null);
   const activeOrders = orders.filter(o => o.status !== OrderStatus.PAID).sort((a, b) => b.timestamp - a.timestamp);
-  const currency = getSetting('currency', '€');
+  const currency = getSetting('currency', 'FCFA');
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -131,7 +132,7 @@ export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, cli
                                                         type="number" 
                                                         value={cashGiven}
                                                         onChange={(e) => setCashGiven(e.target.value)}
-                                                        placeholder="Ex: 50"
+                                                        placeholder="Ex: 5000"
                                                         className="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white text-lg font-bold focus:border-green-500 outline-none"
                                                         autoFocus
                                                     />

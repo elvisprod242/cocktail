@@ -118,7 +118,7 @@ const seedData = () => {
   defaultUsers.forEach(u => userStmt.run([u.id, u.name, u.role, u.pin]));
   userStmt.free();
 
-  db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ['currency', '€']);
+  db.run("INSERT INTO settings (key, value) VALUES (?, ?)", ['currency', 'FCFA']);
 };
 
 export const getUsers = (): User[] => {
@@ -416,6 +416,7 @@ export const updateOrderStatusInDB = (orderId: string, status: OrderStatus) => {
 export const processOrderPayment = (orderId: string, method: PaymentMethod, total: number, clientId?: string) => {
     if (!db) return;
     const numericTotal = Number(total);
+    db.run("UPDATE clients SET total_spent = total_spent + ?, loyalty_points = loyalty_points + ?, last_visit = ? WHERE id = ?", [numericTotal, Math.floor(numericTotal / 10), Date.now(), clientId]);
     db.run("UPDATE orders SET status = ?, payment_method = ? WHERE id = ?", [OrderStatus.PAID, method, orderId]);
     
     // Free the table
@@ -427,17 +428,8 @@ export const processOrderPayment = (orderId: string, method: PaymentMethod, tota
     }
     stmt.free();
 
-    if (clientId) {
-        let sql = `UPDATE clients SET total_spent = total_spent + ?, loyalty_points = loyalty_points + ?, last_visit = ?`;
-        const pointsEarned = Math.floor(numericTotal / 10);
-        const params: any[] = [numericTotal, pointsEarned, Date.now()];
-        if (method === PaymentMethod.TAB) {
-            sql += `, balance = balance - ?`;
-            params.push(numericTotal);
-        }
-        sql += ` WHERE id = ?`;
-        params.push(clientId);
-        db.run(sql, params);
+    if (clientId && method === PaymentMethod.TAB) {
+        db.run("UPDATE clients SET balance = balance - ? WHERE id = ?", [numericTotal, clientId]);
     }
     saveDB();
 };

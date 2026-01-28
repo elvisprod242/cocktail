@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Order, Product, PaymentMethod } from '../types';
 import { 
@@ -318,8 +319,10 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ orders, products, curr
               <tr>
                 <th className="p-5">Article</th>
                 <th className="p-5 text-center">Quantité</th>
-                <th className="p-5 text-right">CA</th>
-                <th className="p-5 text-right">Coût Achat</th>
+                <th className="p-5 text-right">CA Total</th>
+                <th className="p-5 text-right">Bénéfice Unit.</th>
+                <th className="p-5 text-right">Marge Unit. %</th>
+                <th className="p-5 text-right">Coût Achat Total</th>
                 <th className="p-5 text-right">Bénéfice Réel</th>
                 <th className="p-5 text-right">Multiplier</th>
                 <th className="p-5 text-right">Marge %</th>
@@ -328,6 +331,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ orders, products, curr
             <tbody className="divide-y divide-slate-800">
               {reportData.items.map(([name, data]) => {
                 const profit = data.total - data.cost;
+                const unitProfit = data.qty > 0 ? profit / data.qty : 0;
                 const itemMargin = data.total > 0 ? (profit / data.total) * 100 : 0;
                 const multiplier = data.cost > 0 ? data.total / data.cost : 0;
                 return (
@@ -335,6 +339,12 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ orders, products, curr
                     <td className="p-5 font-bold text-white text-xs">{name}</td>
                     <td className="p-5 text-center font-mono text-xs text-slate-500">x{data.qty}</td>
                     <td className="p-5 text-right text-white font-mono text-xs">{data.total.toFixed(2)}{currency}</td>
+                    <td className="p-5 text-right">
+                       <span className="text-blue-400 font-bold text-xs">+{unitProfit.toFixed(2)}{currency}</span>
+                    </td>
+                    <td className="p-5 text-right">
+                       <span className="text-blue-400/80 font-medium text-[10px]">{itemMargin.toFixed(1)}%</span>
+                    </td>
                     <td className="p-5 text-right text-slate-600 font-mono text-xs">{data.cost.toFixed(2)}{currency}</td>
                     <td className="p-5 text-right">
                        <span className="text-green-500 font-black text-xs">+{profit.toFixed(2)}{currency}</span>
@@ -354,7 +364,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ orders, products, curr
               })}
               {reportData.items.length === 0 && (
                 <tr>
-                    <td colSpan={7} className="p-20 text-center italic text-slate-600 uppercase font-black tracking-widest opacity-20">
+                    <td colSpan={9} className="p-20 text-center italic text-slate-600 uppercase font-black tracking-widest opacity-20">
                         Aucune vente à analyser
                     </td>
                 </tr>

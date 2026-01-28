@@ -32,7 +32,7 @@ const App: React.FC = () => {
   const [tables, setTables] = useState<TableDef[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [staff, setStaff] = useState<User[]>([]);
-  const [currency, setCurrency] = useState('€');
+  const [currency, setCurrency] = useState('FCFA');
 
   useEffect(() => {
     const setup = async () => {
@@ -61,7 +61,7 @@ const App: React.FC = () => {
      setTables(getTables());
      setClients(getClients());
      setStaff(getUsers());
-     setCurrency(getSetting('currency', '€'));
+     setCurrency(getSetting('currency', 'FCFA'));
   };
 
   const handleLogin = (user: User) => {
