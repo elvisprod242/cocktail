@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Order, OrderStatus, PaymentMethod, Client } from '../types';
-import { CheckCircle, Clock, Bell, Wallet, CreditCard, Banknote, Smartphone, Calculator, X, User, Printer, ArrowRight, ArrowDown } from 'lucide-react';
+import { CheckCircle, Clock, Bell, Wallet, CreditCard, Banknote, Smartphone, Calculator, X, User, Printer, ArrowRight, ArrowDown, AlertTriangle } from 'lucide-react';
 import { processOrderPayment, updateOrderStatusInDB, getSetting } from '../services/db';
 import { Receipt } from '../components/Receipt';
 
@@ -14,8 +14,43 @@ interface KitchenProps {
 export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, clients }) => {
   const [payingOrder, setPayingOrder] = useState<Order | null>(null);
   const [successPaymentOrder, setSuccessPaymentOrder] = useState<Order | null>(null);
+  const [knownOrderIds, setKnownOrderIds] = useState<Set<string>>(new Set(orders.map(o => o.id)));
+  const [notifications, setNotifications] = useState<{id: string, message: string, isUrgent: boolean}[]>([]);
+  
   const activeOrders = orders.filter(o => o.status !== OrderStatus.PAID).sort((a, b) => b.timestamp - a.timestamp);
   const currency = getSetting('currency', 'FCFA');
+
+  useEffect(() => {
+    const newOrders = orders.filter(o => !knownOrderIds.has(o.id) && o.status === OrderStatus.PENDING);
+    if (newOrders.length > 0) {
+      try {
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play();
+      } catch (e) {
+        console.error("Could not play notification sound", e);
+      }
+
+      const newNotifs = newOrders.map(o => ({
+        id: Math.random().toString(),
+        message: `Nouvelle commande (Table ${o.tableName || o.tableNumber || '?'})`,
+        isUrgent: !!o.isUrgent
+      }));
+
+      setNotifications(prev => [...prev, ...newNotifs]);
+
+      newNotifs.forEach(n => {
+        setTimeout(() => {
+          setNotifications(prev => prev.filter(notif => notif.id !== n.id));
+        }, 8000);
+      });
+
+      setKnownOrderIds(prev => {
+        const updated = new Set(prev);
+        newOrders.forEach(o => updated.add(o.id));
+        return updated;
+      });
+    }
+  }, [orders, knownOrderIds]);
 
   const getStatusColor = (status: OrderStatus) => {
     switch (status) {
@@ -275,75 +310,97 @@ export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, cli
             <p className="text-xl font-medium">Tout est calme en cuisine !</p>
           </div>
         ) : (
-          activeOrders.map(order => (
-            <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col shadow-lg animate-in fade-in zoom-in-95 duration-200">
-              <div className="p-4 bg-slate-800/50 border-b border-slate-800 flex justify-between items-center">
-                <div className="flex flex-col">
-                  <span className="text-sm text-slate-400">Table</span>
-                  <span className="text-xl font-bold text-white">#{order.tableNumber || '?'}</span>
+          activeOrders.map(order => {
+            const isUrgent = order.isUrgent || (order.status === OrderStatus.PENDING && (Date.now() - order.timestamp) > 10 * 60 * 1000);
+            
+            return (
+              <div key={order.id} className={`bg-slate-900 border rounded-xl overflow-hidden flex flex-col shadow-lg animate-in fade-in zoom-in-95 duration-200 ${isUrgent ? 'border-red-500 shadow-red-500/20' : 'border-slate-800'}`}>
+                <div className={`p-4 border-b flex justify-between items-center ${isUrgent ? 'bg-red-500/10 border-red-500/30' : 'bg-slate-800/50 border-slate-800'}`}>
+                  <div className="flex flex-col">
+                    <span className={`text-sm ${isUrgent ? 'text-red-400' : 'text-slate-400'}`}>Table</span>
+                    <span className="text-xl font-bold text-white">#{order.tableNumber || '?'}</span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                     <div className={`flex items-center gap-1 text-xs mb-1 ${isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}`}>
+                       <Clock size={12} />
+                       {new Date(order.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                     </div>
+                     <div className="flex gap-2">
+                       {isUrgent && (
+                         <span className="px-2 py-1 rounded text-[10px] font-black bg-red-500 text-white uppercase tracking-widest animate-pulse">
+                           Urgent
+                         </span>
+                       )}
+                       <span className={`px-2 py-1 rounded text-xs font-bold border ${getStatusColor(order.status)}`}>
+                         {order.status}
+                       </span>
+                     </div>
+                  </div>
                 </div>
-                <div className="flex flex-col items-end">
-                   <div className="flex items-center gap-1 text-slate-400 text-xs mb-1">
-                     <Clock size={12} />
-                     {new Date(order.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                   </div>
-                   <span className={`px-2 py-1 rounded text-xs font-bold border ${getStatusColor(order.status)}`}>
-                     {order.status}
-                   </span>
-                </div>
-              </div>
 
-              <div className="p-4 flex-1">
-                <ul className="space-y-3">
-                  {order.items.map((item, idx) => (
-                    <li key={idx} className="flex justify-between items-start">
-                      <div className="flex gap-3">
-                        <span className="bg-slate-700 text-white w-6 h-6 flex items-center justify-center rounded text-sm font-bold flex-shrink-0">
-                          {item.quantity}
-                        </span>
-                        <span className="text-slate-200 font-medium">{item.name}</span>
+                <div className="p-4 flex-1">
+                  <ul className="space-y-3">
+                    {order.items.map((item, idx) => (
+                      <li key={idx} className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <span className={`${isUrgent ? 'bg-red-500' : 'bg-slate-700'} text-white w-6 h-6 flex items-center justify-center rounded text-sm font-bold flex-shrink-0`}>
+                            {item.quantity}
+                          </span>
+                          <span className="text-slate-200 font-medium">{item.name}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  {order.clientName && (
+                      <div className="mt-4 pt-3 border-t border-slate-800 flex items-center gap-2 text-sm text-blue-400">
+                          <User size={14} />
+                          Client: <span className="font-bold">{order.clientName}</span>
                       </div>
-                    </li>
-                  ))}
-                </ul>
-                {order.clientName && (
-                    <div className="mt-4 pt-3 border-t border-slate-800 flex items-center gap-2 text-sm text-blue-400">
-                        <User size={14} />
-                        Client: <span className="font-bold">{order.clientName}</span>
-                    </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              <div className="p-4 bg-slate-800/30 border-t border-slate-800">
-                 {order.status === OrderStatus.PENDING && (
-                   <button 
-                    onClick={() => updateOrderStatus(order.id, OrderStatus.READY)}
-                    className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-colors"
-                   >
-                     Marquer Prêt
-                   </button>
-                 )}
-                 {order.status === OrderStatus.READY && (
-                   <button 
-                    onClick={() => updateOrderStatus(order.id, OrderStatus.SERVED)}
-                    className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
-                   >
-                     Marquer Servi
-                   </button>
-                 )}
-                 {order.status === OrderStatus.SERVED && (
-                   <button 
-                    onClick={() => setPayingOrder(order)}
-                    className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
-                   >
-                     <Calculator size={18} />
-                     Encaisser
-                   </button>
-                 )}
+                <div className={`p-4 border-t ${isUrgent ? 'bg-red-500/5 border-red-500/20' : 'bg-slate-800/30 border-slate-800'}`}>
+                   {order.status === OrderStatus.PENDING && (
+                     <button 
+                      onClick={() => updateOrderStatus(order.id, OrderStatus.READY)}
+                      className="w-full py-3 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg transition-colors"
+                     >
+                       Marquer Prêt
+                     </button>
+                   )}
+                   {order.status === OrderStatus.READY && (
+                     <button 
+                      onClick={() => updateOrderStatus(order.id, OrderStatus.SERVED)}
+                      className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
+                     >
+                       Marquer Servi
+                     </button>
+                   )}
+                   {order.status === OrderStatus.SERVED && (
+                     <button 
+                      onClick={() => setPayingOrder(order)}
+                      className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg transition-colors flex items-center justify-center gap-2"
+                     >
+                       <Calculator size={18} />
+                       Encaisser
+                     </button>
+                   )}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
+      </div>
+
+      {/* Notifications Toast */}
+      <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 flex flex-col gap-2 pointer-events-none">
+        {notifications.map(notif => (
+          <div key={notif.id} className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl animate-in slide-in-from-right-full fade-in duration-300 pointer-events-auto ${notif.isUrgent ? 'bg-red-500 text-white' : 'bg-slate-800 border border-slate-700 text-white'}`}>
+            {notif.isUrgent ? <AlertTriangle size={20} /> : <Bell size={20} className="text-bar-accent" />}
+            <span className="font-bold text-sm">{notif.message}</span>
+            {notif.isUrgent && <span className="text-[10px] bg-white text-red-500 px-2 py-0.5 rounded-full font-black uppercase tracking-widest ml-2">Urgent</span>}
+          </div>
+        ))}
       </div>
 
       {(payingOrder || successPaymentOrder) && <PaymentModal />}

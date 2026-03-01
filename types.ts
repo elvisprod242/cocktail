@@ -71,6 +71,8 @@ export interface StockEntry {
   quantity: number;
   timestamp: number;
   note: string;
+  userId?: string;
+  userName?: string;
 }
 
 export interface CartItem extends Product {
@@ -102,6 +104,7 @@ export interface Order {
   clientId?: string; 
   clientName?: string;
   paymentMethod?: PaymentMethod; 
+  isUrgent?: boolean;
 }
 
 export interface SalesData {

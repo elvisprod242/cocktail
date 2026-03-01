@@ -44,6 +44,7 @@ export const POS: React.FC<POSProps> = ({
   const [showTableSelector, setShowTableSelector] = useState(false);
   const [showClientSelector, setShowClientSelector] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
+  const [isUrgent, setIsUrgent] = useState(false);
 
   // Gestion du chargement d'une table via navigation state
   useEffect(() => {
@@ -51,6 +52,9 @@ export const POS: React.FC<POSProps> = ({
         setSelectedTable(location.state.tableName);
         // Si la table est occupée, on pourrait charger l'addition, 
         // mais ici on laisse l'utilisateur AJOUTER à la table.
+    }
+    if (location.state?.openCart) {
+      setIsCartOpen(true);
     }
   }, [location.state]);
 
@@ -80,10 +84,11 @@ export const POS: React.FC<POSProps> = ({
         setShowTableSelector(true);
         return;
     }
-    placeOrder(selectedTable, selectedClient);
+    placeOrder(selectedTable, selectedClient, isUrgent);
     setIsCartOpen(false);
     setSelectedTable('');
     setSelectedClient(null);
+    setIsUrgent(false);
   };
 
   // Fix: Explicitly type tablesByZone Record to avoid 'unknown' mapping errors during rendering
@@ -265,6 +270,15 @@ export const POS: React.FC<POSProps> = ({
          </div>
 
          <div className="p-6 bg-slate-950 border-t border-slate-800">
+           <div className="flex items-center justify-between mb-4">
+             <span className="text-slate-400 text-sm font-bold">Commande Urgente</span>
+             <button
+               onClick={() => setIsUrgent(!isUrgent)}
+               className={`w-12 h-6 rounded-full transition-colors relative ${isUrgent ? 'bg-red-500' : 'bg-slate-700'}`}
+             >
+               <div className={`w-4 h-4 rounded-full bg-white absolute top-1 transition-transform ${isUrgent ? 'left-7' : 'left-1'}`}></div>
+             </button>
+           </div>
            <div className="flex justify-between items-center mb-6">
              <span className="text-slate-500 font-black text-xs uppercase tracking-widest">Total Ticket</span>
              <span className="text-3xl font-black text-white">{cartTotal.toFixed(2)}{currency}</span>

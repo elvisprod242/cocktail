@@ -1,16 +1,19 @@
 
-import React from 'react';
-import { LayoutDashboard, Beer, ClipboardList, Package, Shapes, Settings, Armchair, Users, UserCheck, History, FileBarChart, LogOut, ShieldCheck } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { LayoutDashboard, Beer, ClipboardList, Package, Shapes, Settings, Armchair, Users, UserCheck, History, FileBarChart, LogOut, ShieldCheck, ShoppingCart, Menu as MenuIcon, X } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { UserRole, User } from '../types';
 
 interface NavbarProps {
   currentUser: User | null;
   onLogout: () => void;
+  cartItemCount?: number;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout }) => {
+export const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout, cartItemCount = 0 }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   if (!currentUser) return null;
 
@@ -94,28 +97,118 @@ export const Navbar: React.FC<NavbarProps> = ({ currentUser, onLogout }) => {
 
       {/* Mobile Bottom Bar */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 z-[100] px-2 pb-safe">
-        <div className="flex justify-around items-center h-16 overflow-x-auto no-scrollbar">
-          {navItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 ${
-                isActive(item.path) ? 'text-bar-accent' : 'text-slate-500'
-              }`}
+        <div className="flex justify-between items-center h-16 relative">
+          {/* Left Items */}
+          <div className="flex flex-1 justify-around">
+            {navItems.slice(0, 2).map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 ${
+                  isActive(item.path) ? 'text-bar-accent' : 'text-slate-500'
+                }`}
+              >
+                <div className="transform scale-75">{item.icon}</div>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
+              </Link>
+            ))}
+          </div>
+
+          {/* Center Cart Button */}
+          <div className="flex-shrink-0 w-16 flex justify-center relative -top-5">
+            <button
+              onClick={() => navigate('/pos', { state: { openCart: Date.now() } })}
+              className="bg-bar-accent text-white p-4 rounded-full shadow-2xl shadow-bar-accent/50 flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
             >
-              <div className="transform scale-75">{item.icon}</div>
-              <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
-            </Link>
-          ))}
-          <button 
-            onClick={onLogout}
-            className="flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 text-slate-500"
-          >
-            <LogOut size={20} className="transform scale-75" />
-            <span className="text-[9px] font-bold uppercase tracking-tighter">Sortie</span>
-          </button>
+              <div className="relative">
+                <ShoppingCart size={24} />
+                {cartItemCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-white text-bar-accent text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full shadow-sm">
+                    {cartItemCount}
+                  </span>
+                )}
+              </div>
+            </button>
+          </div>
+
+          {/* Right Items */}
+          <div className="flex flex-1 justify-around">
+            {navItems.slice(2, 3).map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 ${
+                  isActive(item.path) ? 'text-bar-accent' : 'text-slate-500'
+                }`}
+              >
+                <div className="transform scale-75">{item.icon}</div>
+                <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
+              </Link>
+            ))}
+            
+            {/* Menu Drawer Toggle */}
+            <button 
+              onClick={() => setIsDrawerOpen(true)}
+              className="flex flex-col items-center justify-center min-w-[60px] h-full space-y-1 text-slate-500"
+            >
+              <MenuIcon size={20} className="transform scale-75" />
+              <span className="text-[9px] font-bold uppercase tracking-tighter">Menu</span>
+            </button>
+          </div>
         </div>
       </nav>
+
+      {/* Mobile Bottom Drawer */}
+      {isDrawerOpen && (
+        <div className="md:hidden fixed inset-0 z-[110] flex flex-col justify-end">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setIsDrawerOpen(false)}></div>
+          <div className="bg-slate-900 border-t border-slate-800 rounded-t-3xl relative z-10 animate-in slide-in-from-bottom-full duration-300">
+            <div className="flex justify-center pt-3 pb-2" onClick={() => setIsDrawerOpen(false)}>
+              <div className="w-12 h-1.5 bg-slate-700 rounded-full"></div>
+            </div>
+            <div className="p-6 pt-2">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-black text-white italic">MENU</h3>
+                <button onClick={() => setIsDrawerOpen(false)} className="text-slate-400 p-2 bg-slate-800 rounded-full">
+                  <X size={20} />
+                </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-4 mb-6">
+                {navItems.slice(3).map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setIsDrawerOpen(false)}
+                    className={`flex flex-col items-center justify-center p-3 rounded-2xl border ${
+                      isActive(item.path) 
+                        ? 'bg-bar-accent/10 border-bar-accent/30 text-bar-accent' 
+                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="mb-2">{item.icon}</div>
+                    <span className="text-[9px] font-bold uppercase tracking-tighter text-center">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+
+              <div className="border-t border-slate-800 pt-6 flex justify-between items-center">
+                <RoleBadge />
+                <button 
+                  onClick={() => {
+                    setIsDrawerOpen(false);
+                    onLogout();
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-500/10 text-red-500 rounded-xl font-bold text-sm"
+                >
+                  <LogOut size={18} />
+                  Sortie
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Product, CategoryDef, StockEntry } from '../types';
+import { Product, CategoryDef, StockEntry, User } from '../types';
 import { addProduct, deleteProduct, updateProduct, replenishStock, getStockHistory } from '../services/db';
 import { Plus, Trash2, Search, Package, X, Edit2, LayoutGrid, List, AlertTriangle, ArrowUp, History, ClipboardList, Info, Filter, CheckCircle2 } from 'lucide-react';
 import { getIconComponent } from '../components/IconRegistry';
@@ -9,6 +9,7 @@ interface ProductsPageProps {
   categories: CategoryDef[];
   refreshData: () => void;
   currency: string;
+  currentUser: User | null;
 }
 
 const StockProgressBar: React.FC<{ stock: number; threshold: number }> = ({ stock, threshold }) => {
@@ -42,7 +43,7 @@ const StockProgressBar: React.FC<{ stock: number; threshold: number }> = ({ stoc
   );
 };
 
-export const Products: React.FC<ProductsPageProps> = ({ products, categories, refreshData, currency }) => {
+export const Products: React.FC<ProductsPageProps> = ({ products, categories, refreshData, currency, currentUser }) => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('All');
@@ -145,7 +146,7 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
       if (!restockProduct || !restockQty) return;
       const qty = parseInt(restockQty);
       
-      replenishStock(restockProduct.id, qty, restockNote || 'Réapprovisionnement manuel');
+      replenishStock(restockProduct.id, qty, restockNote || 'Réapprovisionnement manuel', currentUser?.id, currentUser?.name);
       refreshData();
       setIsRestockConfirmOpen(false);
       setIsRestockOpen(false);
@@ -439,8 +440,14 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
                                 {stockHistory.map(entry => (
                                     <div key={entry.id} className="relative pl-6 border-l border-slate-800 pb-4 last:pb-0">
                                         <div className="absolute left-[-5px] top-0 w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
-                                        <div className="flex justify-between items-start mb-1"><span className="font-bold text-green-500 text-sm">+{entry.quantity}</span><span className="text-[10px] text-slate-500 font-mono">{new Date(entry.timestamp).toLocaleDateString()}</span></div>
+                                        <div className="flex justify-between items-start mb-1">
+                                          <span className="font-bold text-green-500 text-sm">+{entry.quantity}</span>
+                                          <span className="text-[10px] text-slate-500 font-mono text-right">
+                                            {new Date(entry.timestamp).toLocaleDateString()} {new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                          </span>
+                                        </div>
                                         <p className="text-[11px] text-slate-400 leading-snug">{entry.note || "Entrée de stock standard"}</p>
+                                        {entry.userName && <p className="text-[10px] text-slate-500 mt-1 italic">Par: {entry.userName}</p>}
                                     </div>
                                 ))}
                             </div>
@@ -498,8 +505,14 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
                                   <div key={entry.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-start gap-4 hover:border-blue-500/30 transition-colors">
                                       <div className="bg-green-500/10 text-green-500 p-2 rounded-lg shrink-0"><ArrowUp size={16} /></div>
                                       <div className="flex-1 min-w-0">
-                                          <div className="flex justify-between items-center mb-1"><span className="font-bold text-white">+{entry.quantity} unités</span><span className="text-[10px] text-slate-500 font-mono">{new Date(entry.timestamp).toLocaleDateString()}</span></div>
+                                          <div className="flex justify-between items-center mb-1">
+                                            <span className="font-bold text-white">+{entry.quantity} unités</span>
+                                            <span className="text-[10px] text-slate-500 font-mono text-right">
+                                              {new Date(entry.timestamp).toLocaleDateString()} à {new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </span>
+                                          </div>
                                           <p className="text-xs text-slate-400 leading-relaxed italic">{entry.note || 'Aucune note'}</p>
+                                          {entry.userName && <p className="text-[10px] text-slate-500 mt-1">Saisi par: <span className="font-bold text-slate-400">{entry.userName}</span></p>}
                                       </div>
                                   </div>
                               ))

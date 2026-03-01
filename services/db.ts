@@ -65,7 +65,7 @@ const createTables = () => {
   db.run(`CREATE TABLE IF NOT EXISTS clients (id TEXT PRIMARY KEY, name TEXT, phone TEXT, email TEXT, notes TEXT, loyalty_points INTEGER DEFAULT 0, total_spent REAL DEFAULT 0, balance REAL DEFAULT 0, last_visit INTEGER);`);
   db.run(`CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, role TEXT, pin TEXT);`);
   db.run(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);`);
-  db.run(`CREATE TABLE IF NOT EXISTS stock_history (id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, quantity INTEGER, timestamp INTEGER, note TEXT);`);
+  db.run(`CREATE TABLE IF NOT EXISTS stock_history (id INTEGER PRIMARY KEY AUTOINCREMENT, product_id TEXT, quantity INTEGER, timestamp INTEGER, note TEXT, user_id TEXT, user_name TEXT);`);
 };
 
 const applyMigrations = () => {
@@ -74,6 +74,8 @@ const applyMigrations = () => {
     try { db.run("ALTER TABLE tables ADD COLUMN status TEXT DEFAULT 'FREE'"); } catch (e) {}
     try { db.run("ALTER TABLE tables ADD COLUMN reservation_note TEXT"); } catch (e) {}
     try { db.run("CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, name TEXT, role TEXT, pin TEXT);"); } catch (e) {}
+    try { db.run("ALTER TABLE stock_history ADD COLUMN user_id TEXT"); } catch (e) {}
+    try { db.run("ALTER TABLE stock_history ADD COLUMN user_name TEXT"); } catch (e) {}
     
     // Auto-fix table status based on orders
     db.run(`UPDATE tables SET status = 'OCCUPIED' WHERE name IN (SELECT table_name FROM orders WHERE status != 'Payé')`);
@@ -327,11 +329,11 @@ export const deleteProduct = (id: string) => {
   saveDB();
 };
 
-export const replenishStock = (productId: string, quantity: number, note: string) => {
+export const replenishStock = (productId: string, quantity: number, note: string, userId?: string, userName?: string) => {
     if (!db) return;
     db.run("UPDATE products SET stock = stock + ? WHERE id = ?", [quantity, productId]);
-    db.run("INSERT INTO stock_history (product_id, quantity, timestamp, note) VALUES (?, ?, ?, ?)", [
-        productId, quantity, Date.now(), note
+    db.run("INSERT INTO stock_history (product_id, quantity, timestamp, note, user_id, user_name) VALUES (?, ?, ?, ?, ?, ?)", [
+        productId, quantity, Date.now(), note, userId || null, userName || null
     ]);
     saveDB();
 };
@@ -345,7 +347,8 @@ export const getStockHistory = (productId: string): StockEntry[] => {
         const row = stmt.getAsObject();
         entries.push({
             id: row.id, productId: row.product_id, quantity: row.quantity, 
-            timestamp: row.timestamp, note: row.note
+            timestamp: row.timestamp, note: row.note,
+            userId: row.user_id, userName: row.user_name
         });
     }
     stmt.free();

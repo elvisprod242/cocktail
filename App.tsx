@@ -102,7 +102,7 @@ const App: React.FC = () => {
 
   const clearCart = () => setCart([]);
 
-  const placeOrder = (tableName: string, client?: Client | null) => {
+  const placeOrder = (tableName: string, client?: Client | null, isUrgent?: boolean) => {
     if (cart.length === 0) return;
     
     const tableNumber = parseInt(tableName);
@@ -115,7 +115,8 @@ const App: React.FC = () => {
       tableNumber: isNaN(tableNumber) ? undefined : tableNumber,
       tableName: tableName,
       clientId: client?.id,
-      clientName: client?.name
+      clientName: client?.name,
+      isUrgent: isUrgent
     };
     insertOrder(newOrder);
     refreshData();
@@ -155,7 +156,7 @@ const App: React.FC = () => {
   return (
     <Router>
       <div className="flex h-screen bg-slate-950 text-slate-200 font-sans overflow-hidden">
-        {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} />}
+        {currentUser && <Navbar currentUser={currentUser} onLogout={handleLogout} cartItemCount={cart.reduce((sum, item) => sum + item.quantity, 0)} />}
         <main className={`flex-1 h-full overflow-hidden relative transition-all duration-300 ${currentUser ? 'md:ml-20 lg:ml-64' : ''}`}>
           <Routes>
             <Route path="/login" element={!currentUser ? <LoginPage onLogin={handleLogin} users={staff} /> : <Navigate to="/" />} />
@@ -240,7 +241,7 @@ const App: React.FC = () => {
               path="/products" 
               element={
                 <ProtectedRoute roles={[UserRole.ADMIN, UserRole.BARTENDER]}>
-                  <Products products={products} categories={categories} refreshData={refreshData} currency={currency} />
+                  <Products products={products} categories={categories} refreshData={refreshData} currency={currency} currentUser={currentUser} />
                 </ProtectedRoute>
               } 
             />
