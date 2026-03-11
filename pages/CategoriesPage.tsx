@@ -42,7 +42,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ categories, refr
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Shapes className="text-bar-accent" />Gestion des Catégories</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3"><Shapes className="text-bar-accent" />Gestion des Catégories</h1>
           <p className="text-slate-400 mt-1">Organisez votre carte avec des catégories personnalisées</p>
         </div>
         <button onClick={() => setIsModalOpen(true)} className="bg-bar-accent hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-bar-accent/25">
@@ -61,10 +61,10 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ categories, refr
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X size={24} /></button>
-            <h2 className="text-2xl font-bold text-white mb-6">Nouvelle Catégorie</h2>
+            <h2 className="text-lg md:text-xl font-bold text-white mb-6">Nouvelle Catégorie</h2>
             <form onSubmit={handleAddCategory} className="space-y-6">
               <div>
                 <label className="block text-slate-400 text-sm font-medium mb-1">Nom de la catégorie</label>
@@ -88,7 +88,7 @@ export const CategoriesPage: React.FC<CategoriesPageProps> = ({ categories, refr
       )}
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center animate-in zoom-in duration-300">
               <div className="bg-red-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20"><AlertTriangle size={32} className="text-red-500" /></div>
               <h2 className="text-xl font-bold text-white mb-2">Supprimer la catégorie ?</h2>

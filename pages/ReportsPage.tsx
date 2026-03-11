@@ -156,7 +156,7 @@ export const ReportsPage: React.FC<ReportsPageProps> = ({ orders, products, curr
       {/* Header Section */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white flex items-center gap-3 italic tracking-tight uppercase">
+          <h1 className="text-xl md:text-2xl font-black text-white flex items-center gap-3 italic tracking-tight uppercase">
             <div className="p-2 bg-bar-accent/20 rounded-lg text-bar-accent">
                <Scale size={28} />
             </div>

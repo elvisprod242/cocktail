@@ -258,7 +258,7 @@ export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, cli
                                 <CheckCircle size={48} className="text-white" />
                             </div>
                             <div className="text-center">
-                                <h3 className="text-3xl font-bold text-white mb-2">Paiement Validé !</h3>
+                                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Paiement Validé !</h3>
                                 <p className="text-slate-400 text-lg">Le ticket est prêt à l'impression.</p>
                             </div>
                             
@@ -294,7 +294,7 @@ export const Kitchen: React.FC<KitchenProps> = ({ orders, updateOrderStatus, cli
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
           <Bell className="text-bar-accent" />
           Commandes en Cuisine
         </h1>

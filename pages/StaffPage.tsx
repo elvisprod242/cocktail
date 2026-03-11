@@ -71,7 +71,7 @@ export const StaffPage: React.FC<StaffPageProps> = ({ staff, refreshData }) => {
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950 no-scrollbar">
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white flex items-center gap-3 italic tracking-tighter uppercase">
+          <h1 className="text-xl md:text-2xl font-black text-white flex items-center gap-3 italic tracking-tighter uppercase">
             <div className="p-2 bg-bar-accent/20 rounded-lg text-bar-accent">
                <UserCheck size={28} />
             </div>
@@ -122,10 +122,10 @@ export const StaffPage: React.FC<StaffPageProps> = ({ staff, refreshData }) => {
       </div>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-8 relative animate-in zoom-in duration-300">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-400 hover:text-white bg-slate-800 p-1 rounded-full"><X size={24} /></button>
-            <h2 className="text-2xl font-black text-white mb-8 italic flex items-center gap-3">
+            <h2 className="text-lg md:text-xl font-black text-white mb-8 italic flex items-center gap-3">
                 {editingUser ? <Edit2 className="text-bar-accent" /> : <Plus className="text-bar-accent" />}
                 {editingUser ? 'MODIFIER PROFIL' : 'NOUVEAU COMPTE'}
             </h2>
@@ -158,10 +158,10 @@ export const StaffPage: React.FC<StaffPageProps> = ({ staff, refreshData }) => {
       )}
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/98 backdrop-blur-lg p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/98 backdrop-blur-lg p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in duration-300">
               <div className="bg-red-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20"><AlertTriangle size={40} className="text-red-500" /></div>
-              <h2 className="text-2xl font-black text-white mb-3 italic">SUPPRIMER COMPTE ?</h2>
+              <h2 className="text-lg md:text-xl font-black text-white mb-3 italic">SUPPRIMER COMPTE ?</h2>
               <p className="text-slate-400 mb-8 text-sm leading-relaxed font-medium">Ce collaborateur ne pourra plus se connecter au système.</p>
               <div className="flex gap-4">
                 <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-4 rounded-2xl border border-slate-700 text-slate-300 font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-colors">Garder</button>

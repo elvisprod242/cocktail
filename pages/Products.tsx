@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Product, CategoryDef, StockEntry, User } from '../types';
-import { addProduct, deleteProduct, updateProduct, replenishStock, getStockHistory } from '../services/db';
+import { addProduct, deleteProduct, updateProduct, replenishStock, getStockHistory, getAllStockHistory } from '../services/db';
 import { Plus, Trash2, Search, Package, X, Edit2, LayoutGrid, List, AlertTriangle, ArrowUp, History, ClipboardList, Info, Filter, CheckCircle2 } from 'lucide-react';
 import { getIconComponent } from '../components/IconRegistry';
 
@@ -56,6 +56,8 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
   const [restockProduct, setRestockProduct] = useState<Product | null>(null);
   const [stockHistory, setStockHistory] = useState<StockEntry[]>([]);
   const [isHistoryViewOpen, setIsHistoryViewOpen] = useState(false);
+  const [isGlobalHistoryOpen, setIsGlobalHistoryOpen] = useState(false);
+  const [globalStockHistory, setGlobalStockHistory] = useState<(StockEntry & { productName?: string })[]>([]);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   
   const [name, setName] = useState('');
@@ -112,6 +114,11 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
       setRestockProduct(product);
       setStockHistory(getStockHistory(product.id));
       setIsHistoryViewOpen(true);
+  };
+
+  const handleOpenGlobalHistory = () => {
+      setGlobalStockHistory(getAllStockHistory());
+      setIsGlobalHistoryOpen(true);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -189,15 +196,20 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950 flex flex-col no-scrollbar">
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
             <Package className="text-bar-accent" />
             Stock & Inventaire
           </h1>
           <p className="text-slate-400 mt-1">Gérez vos niveaux de stock et visualisez les ruptures</p>
         </div>
-        <button onClick={() => handleOpenModal()} className="bg-bar-accent hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-bar-accent/25 w-full md:w-auto justify-center">
-          <Plus size={20} /> Nouveau Produit
-        </button>
+        <div className="flex gap-3 w-full md:w-auto">
+          <button onClick={handleOpenGlobalHistory} className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors border border-slate-700 w-full md:w-auto justify-center">
+            <ClipboardList size={20} className="text-blue-500" /> Journal
+          </button>
+          <button onClick={() => handleOpenModal()} className="bg-bar-accent hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-bar-accent/25 w-full md:w-auto justify-center">
+            <Plus size={20} /> Nouveau Produit
+          </button>
+        </div>
       </div>
 
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 mb-6 flex flex-col xl:flex-row gap-3 items-center sticky top-0 z-10 shadow-md">
@@ -306,7 +318,7 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
 
       {/* RE-STOCK MODAL */}
       {isRestockOpen && restockProduct && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                   <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2"><ArrowUp size={20} className="text-green-500" /> Approvisionnement</h2>
@@ -336,7 +348,7 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
 
       {/* RESTOCK CONFIRMATION MODAL */}
       {isRestockConfirmOpen && restockProduct && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-green-500/30 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center animate-in zoom-in duration-300">
               <div className="bg-green-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/20">
                 <CheckCircle2 size={32} className="text-green-500" />
@@ -372,86 +384,62 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
 
       {/* PRODUCT EDIT/ADD MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
-          <div className="bg-slate-900 border border-slate-800 w-full max-w-4xl rounded-2xl shadow-2xl p-6 relative my-8">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200 overflow-y-auto no-scrollbar">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl p-6 relative my-8">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white"><X size={24} /></button>
-            <h2 className="text-2xl font-bold text-white mb-6">{editingProduct ? 'Détails du Produit' : 'Nouveau Produit'}</h2>
+            <h2 className="text-lg md:text-xl font-bold text-white mb-6">{editingProduct ? 'Détails du Produit' : 'Nouveau Produit'}</h2>
             <form onSubmit={handleSave} className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2 sm:col-span-1">
-                            <label className="block text-slate-400 text-xs font-bold mb-1 uppercase tracking-wider">Nom</label>
-                            <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-bar-accent outline-none" />
-                        </div>
-                        <div className="col-span-2 sm:col-span-1">
-                            <label className="block text-slate-400 text-xs font-bold mb-1 uppercase tracking-wider">Catégorie</label>
-                            <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-bar-accent outline-none">
-                                {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                            </select>
-                        </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-slate-400 text-xs font-bold mb-1 uppercase tracking-wider">Nom</label>
+                        <input type="text" required value={name} onChange={e => setName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-bar-accent outline-none" />
                     </div>
-                    <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-5">
-                        <div className="flex items-center justify-between mb-2">
-                             <div className="flex items-center gap-2 text-bar-accent"><Package size={16} /><span className="text-xs font-bold uppercase tracking-widest">Configuration du Stock</span></div>
-                             <div className="flex items-center gap-1.5 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20"><AlertTriangle size={12} className="text-orange-500" /><span className="text-[10px] font-bold text-orange-400 uppercase">Alerte auto</span></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wide">Stock Actuel</label>
-                                <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-white text-lg focus:border-bar-accent outline-none font-bold shadow-inner" />
-                            </div>
-                            <div>
-                                <label className="block text-orange-400 text-[10px] font-bold mb-1.5 uppercase tracking-wide flex items-center gap-1">Seuil d'Alerte <Info size={10} /></label>
-                                <input type="number" value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} className="w-full bg-slate-900 border border-orange-900/40 rounded-lg p-3 text-orange-400 text-lg focus:border-orange-500 outline-none font-bold shadow-inner" />
-                            </div>
-                        </div>
-                        <div className="pt-2"><StockProgressBar stock={parseInt(stock) || 0} threshold={parseInt(alertThreshold) || 1} /></div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase">Coût Achat</label>
-                            <input 
-                                type="number" 
-                                step="0.01" 
-                                value={costPrice} 
-                                onChange={e => {
-                                    const val = e.target.value;
-                                    setCostPrice(val);
-                                    // Pré-remplir le stock si vide ou à zéro pour un nouveau produit
-                                    if (!editingProduct && (stock === '' || stock === '0')) {
-                                        setStock(val);
-                                    }
-                                }} 
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-bar-accent outline-none" 
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase">Prix de Vente</label>
-                            <input type="number" step="0.1" required value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white font-bold focus:border-bar-accent outline-none" />
-                        </div>
+                    <div className="col-span-2 sm:col-span-1">
+                        <label className="block text-slate-400 text-xs font-bold mb-1 uppercase tracking-wider">Catégorie</label>
+                        <select value={category} onChange={e => setCategory(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white focus:border-bar-accent outline-none">
+                            {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                        </select>
                     </div>
                 </div>
-                <div className="flex flex-col h-full space-y-4">
-                    <div className="flex items-center justify-between"><label className="text-slate-200 text-sm font-bold flex items-center gap-2"><History size={18} className="text-blue-500" /> Historique d'approvisionnement</label></div>
-                    <div className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl overflow-y-auto max-h-[450px] p-4 custom-scrollbar">
-                        {stockHistory.length === 0 ? (<div className="h-full flex flex-col items-center justify-center text-slate-600 text-xs italic gap-4 py-12"><ClipboardList size={32} className="opacity-10" /><p>Aucun approvisionnement pour le moment</p></div>) : (
-                            <div className="space-y-4">
-                                {stockHistory.map(entry => (
-                                    <div key={entry.id} className="relative pl-6 border-l border-slate-800 pb-4 last:pb-0">
-                                        <div className="absolute left-[-5px] top-0 w-2.5 h-2.5 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.4)]"></div>
-                                        <div className="flex justify-between items-start mb-1">
-                                          <span className="font-bold text-green-500 text-sm">+{entry.quantity}</span>
-                                          <span className="text-[10px] text-slate-500 font-mono text-right">
-                                            {new Date(entry.timestamp).toLocaleDateString()} {new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                          </span>
-                                        </div>
-                                        <p className="text-[11px] text-slate-400 leading-snug">{entry.note || "Entrée de stock standard"}</p>
-                                        {entry.userName && <p className="text-[10px] text-slate-500 mt-1 italic">Par: {entry.userName}</p>}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                <div className="bg-slate-950 border border-slate-800 p-4 rounded-xl space-y-5">
+                    <div className="flex items-center justify-between mb-2">
+                         <div className="flex items-center gap-2 text-bar-accent"><Package size={16} /><span className="text-xs font-bold uppercase tracking-widest">Configuration du Stock</span></div>
+                         <div className="flex items-center gap-1.5 bg-orange-500/10 px-2 py-1 rounded border border-orange-500/20"><AlertTriangle size={12} className="text-orange-500" /><span className="text-[10px] font-bold text-orange-400 uppercase">Alerte auto</span></div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-6">
+                        <div>
+                            <label className="block text-slate-400 text-[10px] font-bold mb-1.5 uppercase tracking-wide">Stock Actuel</label>
+                            <input type="number" value={stock} onChange={e => setStock(e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-3 text-white text-lg focus:border-bar-accent outline-none font-bold shadow-inner" />
+                        </div>
+                        <div>
+                            <label className="block text-orange-400 text-[10px] font-bold mb-1.5 uppercase tracking-wide flex items-center gap-1">Seuil d'Alerte <Info size={10} /></label>
+                            <input type="number" value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} className="w-full bg-slate-900 border border-orange-900/40 rounded-lg p-3 text-orange-400 text-lg focus:border-orange-500 outline-none font-bold shadow-inner" />
+                        </div>
+                    </div>
+                    <div className="pt-2"><StockProgressBar stock={parseInt(stock) || 0} threshold={parseInt(alertThreshold) || 1} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase">Coût Achat</label>
+                        <input 
+                            type="number" 
+                            step="0.01" 
+                            value={costPrice} 
+                            onChange={e => {
+                                const val = e.target.value;
+                                setCostPrice(val);
+                                // Pré-remplir le stock si vide ou à zéro pour un nouveau produit
+                                if (!editingProduct && (stock === '' || stock === '0')) {
+                                    setStock(val);
+                                }
+                            }} 
+                            className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white text-sm focus:border-bar-accent outline-none" 
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-slate-400 text-[10px] font-bold mb-1 uppercase">Prix de Vente</label>
+                        <input type="number" step="0.1" required value={price} onChange={e => setPrice(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-white font-bold focus:border-bar-accent outline-none" />
                     </div>
                 </div>
               </div>
@@ -465,7 +453,7 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
       )}
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center animate-in zoom-in duration-300">
               <div className="bg-red-500/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                 <AlertTriangle size={32} className="text-red-500" />
@@ -482,37 +470,76 @@ export const Products: React.FC<ProductsPageProps> = ({ products, categories, re
 
       {/* HISTORY MODAL */}
       {isHistoryViewOpen && restockProduct && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-              <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-                  <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2"><History size={20} className="text-blue-500" /> Journal de Stock</h2>
-                    <button onClick={() => setIsHistoryViewOpen(false)} className="text-slate-400 hover:text-white"><X size={24} /></button>
-                  </div>
-                  <div className="p-6 overflow-y-auto">
-                      <div className="mb-6 flex justify-between items-end">
+          <div className="fixed inset-0 z-[120] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+              <div className="p-4 md:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                  <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-3 italic"><History size={24} className="text-blue-500" /> JOURNAL DE STOCK</h2>
+                  <button onClick={() => setIsHistoryViewOpen(false)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full transition-colors"><X size={24} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                  <div className="max-w-4xl mx-auto">
+                      <div className="mb-8 flex justify-between items-end bg-slate-900 p-6 rounded-2xl border border-slate-800">
                           <div>
-                              <h3 className="text-white font-bold text-lg">{restockProduct.name}</h3>
-                              <p className="text-xs text-slate-500">Historique complet des entrées</p>
+                              <h3 className="text-white font-black text-2xl mb-1">{restockProduct.name}</h3>
+                              <p className="text-sm text-slate-400">Historique complet des entrées</p>
                           </div>
                           <div className="text-right">
-                              <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Stock Actuel</span>
-                              <span className={`text-xl font-bold ${restockProduct.stock <= restockProduct.alertThreshold ? 'text-orange-500' : 'text-green-500'}`}>{restockProduct.stock}</span>
+                              <span className="text-xs text-slate-500 uppercase font-black tracking-widest block mb-1">Stock Actuel</span>
+                              <span className={`text-3xl font-black ${restockProduct.stock <= restockProduct.alertThreshold ? 'text-orange-500' : 'text-green-500'}`}>{restockProduct.stock}</span>
                           </div>
                       </div>
-                      <div className="space-y-3">
-                          {stockHistory.length === 0 ? (<div className="text-center py-12 text-slate-600 italic border border-dashed border-slate-800 rounded-xl">Aucune entrée enregistrée.</div>) : (
+                      <div className="space-y-4">
+                          {stockHistory.length === 0 ? (<div className="text-center py-16 text-slate-500 italic border-2 border-dashed border-slate-800 rounded-2xl font-medium">Aucune entrée enregistrée.</div>) : (
                               stockHistory.map(entry => (
-                                  <div key={entry.id} className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex items-start gap-4 hover:border-blue-500/30 transition-colors">
-                                      <div className="bg-green-500/10 text-green-500 p-2 rounded-lg shrink-0"><ArrowUp size={16} /></div>
+                                  <div key={entry.id} className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-start gap-5 hover:border-blue-500/50 transition-colors shadow-lg shadow-black/20">
+                                      <div className="bg-green-500/10 text-green-500 p-3 rounded-xl shrink-0"><ArrowUp size={24} /></div>
                                       <div className="flex-1 min-w-0">
-                                          <div className="flex justify-between items-center mb-1">
-                                            <span className="font-bold text-white">+{entry.quantity} unités</span>
-                                            <span className="text-[10px] text-slate-500 font-mono text-right">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <span className="font-black text-white text-lg">+{entry.quantity} unités</span>
+                                            <span className="text-xs text-slate-400 font-mono text-right bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
                                               {new Date(entry.timestamp).toLocaleDateString()} à {new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                                             </span>
                                           </div>
-                                          <p className="text-xs text-slate-400 leading-relaxed italic">{entry.note || 'Aucune note'}</p>
-                                          {entry.userName && <p className="text-[10px] text-slate-500 mt-1">Saisi par: <span className="font-bold text-slate-400">{entry.userName}</span></p>}
+                                          <p className="text-sm text-slate-300 leading-relaxed">{entry.note || <span className="italic text-slate-600">Aucune note</span>}</p>
+                                          {entry.userName && <p className="text-xs text-slate-500 mt-3 font-medium flex items-center gap-1">Saisi par: <span className="font-bold text-slate-300">{entry.userName}</span></p>}
+                                      </div>
+                                  </div>
+                              ))
+                          )}
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* GLOBAL HISTORY MODAL */}
+      {isGlobalHistoryOpen && (
+          <div className="fixed inset-0 z-[120] bg-slate-950 flex flex-col animate-in slide-in-from-bottom-4 duration-300">
+              <div className="p-4 md:p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900">
+                  <div>
+                      <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-3 italic"><ClipboardList size={24} className="text-blue-500" /> JOURNAL DE STOCK GLOBAL</h2>
+                      <p className="text-slate-400 text-sm mt-1">Historique de tous les mouvements de stock</p>
+                  </div>
+                  <button onClick={() => setIsGlobalHistoryOpen(false)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full transition-colors"><X size={24} /></button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                  <div className="max-w-5xl mx-auto">
+                      <div className="space-y-4">
+                          {globalStockHistory.length === 0 ? (<div className="text-center py-16 text-slate-500 italic border-2 border-dashed border-slate-800 rounded-2xl font-medium">Aucune entrée enregistrée dans le journal.</div>) : (
+                              globalStockHistory.map(entry => (
+                                  <div key={entry.id} className="bg-slate-900 border border-slate-800 p-5 rounded-2xl flex items-start gap-5 hover:border-blue-500/50 transition-colors shadow-lg shadow-black/20">
+                                      <div className="bg-green-500/10 text-green-500 p-3 rounded-xl shrink-0"><ArrowUp size={24} /></div>
+                                      <div className="flex-1 min-w-0">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <div>
+                                                <span className="font-black text-white text-lg mr-2">+{entry.quantity} unités</span>
+                                                <span className="text-sm text-slate-300 font-bold bg-slate-800 px-2 py-0.5 rounded">{entry.productName || 'Produit inconnu'}</span>
+                                            </div>
+                                            <span className="text-xs text-slate-400 font-mono text-right bg-slate-950 px-3 py-1 rounded-lg border border-slate-800">
+                                              {new Date(entry.timestamp).toLocaleDateString()} à {new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                            </span>
+                                          </div>
+                                          <p className="text-sm text-slate-300 leading-relaxed">{entry.note || <span className="italic text-slate-600">Aucune note</span>}</p>
+                                          {entry.userName && <p className="text-xs text-slate-500 mt-3 font-medium flex items-center gap-1">Saisi par: <span className="font-bold text-slate-300">{entry.userName}</span></p>}
                                       </div>
                                   </div>
                               ))

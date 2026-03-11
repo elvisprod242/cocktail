@@ -30,7 +30,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ currentCurrency, onC
   return (
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950">
       <div className="max-w-4xl mx-auto pb-24 md:pb-0">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+        <h1 className="text-xl md:text-2xl font-bold text-white mb-2 flex items-center gap-3">
           <Settings className="text-bar-accent" />
           Paramètres
         </h1>

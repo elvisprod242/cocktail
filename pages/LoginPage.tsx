@@ -85,7 +85,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin, users }) => {
               <div className="w-20 h-20 bg-gradient-to-tr from-bar-accent to-purple-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-bar-accent/20 mx-auto mb-6 transform hover:rotate-12 transition-transform cursor-pointer">
                 <Beer className="text-white" size={40} />
               </div>
-              <h1 className="text-4xl font-black text-white italic tracking-tighter mb-2 uppercase">BARFLOW AI</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white italic tracking-tighter mb-2 uppercase">BARFLOW AI</h1>
               <p className="text-slate-500 font-medium tracking-wide">AUTHENTIFICATION PERSONNELLE</p>
             </div>
 

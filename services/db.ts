@@ -355,6 +355,28 @@ export const getStockHistory = (productId: string): StockEntry[] => {
     return entries;
 };
 
+export const getAllStockHistory = (): (StockEntry & { productName?: string })[] => {
+    if (!db) return [];
+    const stmt = db.prepare(`
+        SELECT sh.*, p.name as product_name 
+        FROM stock_history sh 
+        LEFT JOIN products p ON sh.product_id = p.id 
+        ORDER BY sh.timestamp DESC
+    `);
+    const entries: (StockEntry & { productName?: string })[] = [];
+    while (stmt.step()) {
+        const row = stmt.getAsObject();
+        entries.push({
+            id: row.id, productId: row.product_id, quantity: row.quantity, 
+            timestamp: row.timestamp, note: row.note,
+            userId: row.user_id, userName: row.user_name,
+            productName: row.product_name
+        });
+    }
+    stmt.free();
+    return entries;
+};
+
 export const getOrders = (): Order[] => {
   if (!db) return [];
   try {

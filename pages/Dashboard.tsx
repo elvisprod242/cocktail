@@ -176,7 +176,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ orders, products, currency
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-            <h1 className="text-3xl font-bold text-white">Tableau de bord</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-white">Tableau de bord</h1>
             <p className="text-slate-400 mt-1">Vision globale de la performance de votre établissement</p>
         </div>
         

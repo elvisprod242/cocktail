@@ -91,7 +91,7 @@ export const SalesHistoryPage: React.FC<SalesHistoryPageProps> = ({ orders, curr
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-6 md:mb-8 gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3">
             <History className="text-bar-accent" />
             Historique Ventes
           </h1>

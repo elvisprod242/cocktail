@@ -110,7 +110,7 @@ export const POS: React.FC<POSProps> = ({
         {/* Header */}
         <div className="p-4 md:p-6 bg-slate-900 border-b border-slate-800 sticky top-0 z-20">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h1 className="text-2xl font-black text-white italic tracking-tighter">CAISSE</h1>
+            <h1 className="text-xl md:text-2xl font-black text-white italic tracking-tighter">CAISSE</h1>
             <div className="relative w-full md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
@@ -157,7 +157,7 @@ export const POS: React.FC<POSProps> = ({
 
         {/* Product Grid */}
         <div className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 md:pb-6 no-scrollbar">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-3">
             {filteredProducts.map(product => (
               <ProductCard 
                 key={product.id} 
@@ -171,13 +171,28 @@ export const POS: React.FC<POSProps> = ({
         </div>
       </div>
 
+      {/* Mobile Cart Toggle */}
+      <div className="lg:hidden fixed bottom-20 right-4 z-50">
+        <button 
+          onClick={() => setIsCartOpen(true)}
+          className="bg-bar-accent text-white p-4 rounded-full shadow-2xl flex items-center justify-center relative"
+        >
+          <ShoppingCart size={24} />
+          {cart.length > 0 && (
+            <span className="absolute -top-2 -right-2 bg-white text-bar-accent w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs shadow-md">
+              {cart.reduce((sum, item) => sum + item.quantity, 0)}
+            </span>
+          )}
+        </button>
+      </div>
+
       {/* Cart Sidebar */}
       <div className={`
-        fixed inset-0 z-[60] md:static md:z-0 md:w-96 bg-slate-900 border-l border-slate-800 flex flex-col transition-transform duration-300 transform
-        ${isCartOpen ? 'translate-y-0' : 'translate-y-[100%] md:translate-y-0'}
+        fixed inset-0 z-[110] lg:static lg:z-0 lg:w-96 bg-slate-900 border-l border-slate-800 flex flex-col transition-transform duration-300 transform
+        ${isCartOpen ? 'translate-y-0' : 'translate-y-[100%] lg:translate-y-0'}
       `}>
          {/* Mobile Handle */}
-         <div className="md:hidden flex justify-center pt-2 pb-1" onClick={() => setIsCartOpen(false)}>
+         <div className="lg:hidden flex justify-center pt-2 pb-1" onClick={() => setIsCartOpen(false)}>
             <div className="w-12 h-1.5 bg-slate-700 rounded-full"></div>
          </div>
 
@@ -296,10 +311,10 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Table Selector Modal - Enhanced */}
       {showTableSelector && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-5xl max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300">
             <div className="p-8 border-b border-slate-800 flex justify-between items-center">
-              <h2 className="text-2xl font-black text-white italic flex items-center gap-3">
+              <h2 className="text-lg md:text-xl font-black text-white italic flex items-center gap-3">
                 <Armchair className="text-bar-accent" /> SÉLECTION TABLE
               </h2>
               <button onClick={() => setShowTableSelector(false)} className="text-slate-400 hover:text-white bg-slate-800 p-2 rounded-full transition-colors"><X size={24} /></button>
@@ -362,7 +377,7 @@ export const POS: React.FC<POSProps> = ({
 
       {/* Client Selector Modal remains same... */}
       {showClientSelector && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-300">
            <div className="bg-slate-900 border border-slate-800 w-full max-w-md max-h-[80vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300">
               <div className="p-6 border-b border-slate-800 flex justify-between items-center">
                   <h2 className="text-xl font-black text-white italic flex items-center gap-2">

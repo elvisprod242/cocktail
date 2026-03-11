@@ -79,7 +79,7 @@ export const TablesPage: React.FC<TablesPageProps> = ({ tables, refreshData, ord
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-6">
         <div>
-          <h1 className="text-3xl font-black text-white italic tracking-tighter flex items-center gap-3">
+          <h1 className="text-xl md:text-2xl font-black text-white italic tracking-tighter flex items-center gap-3">
              <div className="p-2 bg-bar-accent/20 rounded-lg text-bar-accent">
                 <Armchair size={28} />
              </div>
@@ -240,9 +240,9 @@ export const TablesPage: React.FC<TablesPageProps> = ({ tables, refreshData, ord
 
       {/* Reservation Modal */}
       {reservationModalTable && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-8 animate-in zoom-in duration-300">
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3 italic">
+              <h2 className="text-lg md:text-xl font-black text-white mb-6 flex items-center gap-3 italic">
                  <CalendarCheck className="text-amber-500" /> RÉSERVATION
               </h2>
               <div className="mb-6 p-4 bg-slate-950 rounded-2xl border border-slate-800">
@@ -270,9 +270,9 @@ export const TablesPage: React.FC<TablesPageProps> = ({ tables, refreshData, ord
 
       {/* New Table Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl p-8 animate-in zoom-in duration-300">
-              <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3 italic">
+              <h2 className="text-lg md:text-xl font-black text-white mb-6 flex items-center gap-3 italic">
                  <Plus className="text-bar-accent" /> NOUVELLE TABLE
               </h2>
               <form onSubmit={handleAddTable} className="space-y-5">

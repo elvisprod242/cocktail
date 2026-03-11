@@ -118,7 +118,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
     <div className="p-4 md:p-8 h-full overflow-y-auto bg-slate-950 no-scrollbar">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3"><Users className="text-bar-accent" />Gestion Clients</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-white flex items-center gap-3"><Users className="text-bar-accent" />Gestion Clients</h1>
           <p className="text-slate-400 mt-1">Fidélisation, ardoises et statistiques de consommation</p>
         </div>
         <button onClick={() => openModal()} className="bg-bar-accent hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl flex items-center gap-2 transition-colors shadow-lg shadow-bar-accent/25 w-full md:w-auto justify-center">
@@ -189,7 +189,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
       {viewingHistory && (() => {
           const { clientOrders, favorites, avgBasket, status } = getClientStats(viewingHistory);
           return (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300">
+            <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-md p-4 animate-in fade-in duration-300">
               <div className="bg-slate-900 border border-slate-800 w-full max-w-5xl h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in duration-300">
                 <div className="p-6 bg-slate-800/50 border-b border-slate-800 flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-4">
@@ -197,7 +197,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
                             {viewingHistory.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                            <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <h2 className="text-xl md:text-2xl font-black text-white flex items-center gap-3">
                                 {viewingHistory.name}
                                 <span className={`text-xs px-2.5 py-1 rounded-full font-bold uppercase ${status.color}`}>
                                     {status.label}
@@ -320,10 +320,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
       })()}
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white bg-slate-800 p-1 rounded-full"><X size={20} /></button>
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-6 flex items-center gap-2">
                 {editingClient ? <Edit2 size={24} className="text-bar-accent" /> : <Plus size={24} className="text-bar-accent" />}
                 {editingClient ? 'Modifier Client' : 'Nouveau Client'}
             </h2>
@@ -360,7 +360,7 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
       {balanceModalClient && (() => {
           const { currentDebt } = getClientStats(balanceModalClient);
           return (
-            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-slate-900 border border-slate-800 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
                 <div className="p-6 bg-slate-800/50 border-b border-slate-700 flex justify-between items-center"><h2 className="text-xl font-black text-white">Gestion Ardoise</h2><button onClick={() => setBalanceModalClient(null)} className="text-slate-400 hover:text-white bg-slate-900 p-1 rounded-full"><X size={24} /></button></div>
                 <div className="p-8">
@@ -397,10 +397,10 @@ export const ClientsPage: React.FC<ClientsPageProps> = ({ clients, refreshData, 
       })()}
 
       {deleteConfirmId && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
            <div className="bg-slate-900 border border-red-500/30 w-full max-w-sm rounded-3xl shadow-2xl p-8 text-center animate-in zoom-in duration-300">
               <div className="bg-red-500/10 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/20"><AlertTriangle size={40} className="text-red-500" /></div>
-              <h2 className="text-2xl font-black text-white mb-3">Supprimer ce client ?</h2>
+              <h2 className="text-xl md:text-2xl font-black text-white mb-3">Supprimer ce client ?</h2>
               <p className="text-slate-400 mb-8 text-sm leading-relaxed">Cette action effacera définitivement ses points de fidélité et tout son historique de consommation.</p>
               <div className="flex gap-4">
                 <button onClick={() => setDeleteConfirmId(null)} className="flex-1 py-4 rounded-2xl border border-slate-700 text-slate-300 font-black uppercase text-xs tracking-widest hover:bg-slate-800 transition-colors">Annuler</button>

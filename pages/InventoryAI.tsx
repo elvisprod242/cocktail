@@ -31,7 +31,7 @@ export const InventoryAI: React.FC = () => {
           <div className="inline-flex items-center justify-center p-3 bg-bar-accent/20 rounded-full mb-4">
             <Sparkles className="text-bar-accent w-8 h-8" />
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Mixologue IA</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Mixologue IA</h1>
           <p className="text-slate-400">Entrez les ingrédients dont vous disposez, et laissez l'IA inventer votre prochain cocktail signature.</p>
         </div>
 
@@ -69,7 +69,7 @@ export const InventoryAI: React.FC = () => {
               <div className="bg-slate-700 p-3 rounded-xl">
                  <Wine className="text-bar-accent w-8 h-8" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white">{recipe.name}</h2>
+              <h2 className="text-xl md:text-2xl font-bold text-white">{recipe.name}</h2>
             </div>
             
             <div className="p-6 md:p-8 grid gap-8">
