@@ -1,7 +1,7 @@
 export enum UserRole {
-  ADMIN = 'ADMIN',
-  BARTENDER = 'BARTENDER',
-  SERVER = 'SERVER'
+  ADMIN = "ADMIN",
+  BARTENDER = "BARTENDER",
+  SERVER = "SERVER",
 }
 
 export interface User {
@@ -12,9 +12,9 @@ export interface User {
 }
 
 export enum TableStatus {
-  FREE = 'FREE',
-  OCCUPIED = 'OCCUPIED',
-  RESERVED = 'RESERVED'
+  FREE = "FREE",
+  OCCUPIED = "OCCUPIED",
+  RESERVED = "RESERVED",
 }
 
 export interface TableDef {
@@ -27,11 +27,11 @@ export interface TableDef {
 }
 
 export enum Category {
-  COCKTAIL = 'Cocktails',
-  BEER = 'Bières',
-  WINE = 'Vins',
-  SOFT = 'Softs',
-  FOOD = 'Snacks'
+  COCKTAIL = "Cocktails",
+  BEER = "Bières",
+  WINE = "Vins",
+  SOFT = "Softs",
+  FOOD = "Snacks",
 }
 
 export interface CategoryDef {
@@ -58,11 +58,11 @@ export interface Product {
   price: number;
   costPrice: number;
   stock: number;
-  alertThreshold: number; 
-  category: string; 
+  alertThreshold: number;
+  category: string;
   image?: string;
   description?: string;
-  isAvailable?: boolean; 
+  isAvailable?: boolean;
 }
 
 export interface StockEntry {
@@ -80,17 +80,17 @@ export interface CartItem extends Product {
 }
 
 export enum OrderStatus {
-  PENDING = 'En attente',
-  READY = 'Prêt',
-  SERVED = 'Servi',
-  PAID = 'Payé'
+  PENDING = "En attente",
+  READY = "Prêt",
+  SERVED = "Servi",
+  PAID = "Payé",
 }
 
 export enum PaymentMethod {
-  CASH = 'Espèces',
-  CARD = 'Carte Bancaire',
-  MOBILE_MONEY = 'Mobile Money',
-  TAB = 'Ardoise'
+  CASH = "Espèces",
+  CARD = "Carte Bancaire",
+  MOBILE_MONEY = "Mobile Money",
+  TAB = "Ardoise",
 }
 
 export interface Order {
@@ -99,11 +99,11 @@ export interface Order {
   total: number;
   status: OrderStatus;
   timestamp: number;
-  tableNumber?: number; 
-  tableName?: string; 
-  clientId?: string; 
+  tableNumber?: number;
+  tableName?: string;
+  clientId?: string;
   clientName?: string;
-  paymentMethod?: PaymentMethod; 
+  paymentMethod?: PaymentMethod;
   isUrgent?: boolean;
 }
 

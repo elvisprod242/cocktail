@@ -1,7 +1,7 @@
-import React from 'react';
-import { Product } from '../types';
-import { Plus } from 'lucide-react';
-import { getIconComponent } from './IconRegistry';
+import React from "react";
+import { Product } from "../types";
+import { Plus } from "lucide-react";
+import { getIconComponent } from "./IconRegistry";
 
 interface ProductCardProps {
   product: Product;
@@ -10,11 +10,16 @@ interface ProductCardProps {
   currency: string;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, iconName, onAdd, currency }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  iconName,
+  onAdd,
+  currency,
+}) => {
   const Icon = getIconComponent(iconName);
 
   return (
-    <div 
+    <div
       className="bg-slate-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border border-slate-700 cursor-pointer group flex flex-col h-full"
       onClick={() => onAdd(product)}
     >
@@ -25,9 +30,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, iconName, onA
         </div>
       </div>
       <div className="p-3 flex-1 flex flex-col items-center justify-between text-center gap-2">
-        <h3 className="font-bold text-slate-100 text-xs leading-tight line-clamp-2">{product.name}</h3>
+        <h3 className="font-bold text-slate-100 text-xs leading-tight line-clamp-2">
+          {product.name}
+        </h3>
         <span className="font-bold text-bar-accent text-sm bg-slate-900/50 px-3 py-1 rounded-full border border-slate-700/50">
-            {product.price}{currency}
+          {product.price}
+          {currency}
         </span>
       </div>
     </div>
