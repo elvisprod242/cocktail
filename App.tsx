@@ -59,7 +59,7 @@ const App: React.FC = () => {
   const [tables, setTables] = useState<TableDef[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [staff, setStaff] = useState<User[]>([]);
-  const [currency, setCurrency] = useState("FCFA");
+  const [currency, setCurrency] = useState("XAF");
 
   useEffect(() => {
     const setup = async () => {
@@ -88,7 +88,7 @@ const App: React.FC = () => {
     setTables(getTables());
     setClients(getClients());
     setStaff(getUsers());
-    setCurrency(getSetting("currency", "FCFA"));
+    setCurrency(getSetting("currency", "XAF"));
   };
 
   const handleLogin = (user: User) => {
@@ -207,7 +207,7 @@ const App: React.FC = () => {
           />
         )}
         <main
-          className={`flex-1 h-full overflow-hidden relative transition-all duration-300 ${currentUser ? "md:ml-20 lg:ml-64" : ""}`}
+          className={`flex-1 h-full overflow-hidden relative transition-all duration-300 ${currentUser ? "md:ml-20 xl:ml-64" : ""}`}
         >
           <Routes>
             <Route

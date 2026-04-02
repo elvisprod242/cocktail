@@ -187,7 +187,7 @@ const seedData = () => {
 
   db.run("INSERT INTO settings (key, value) VALUES (?, ?)", [
     "currency",
-    "FCFA",
+    "XAF",
   ]);
 };
 

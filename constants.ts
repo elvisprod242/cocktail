@@ -4,7 +4,7 @@ export const CURRENCIES = [
   { code: "EUR", symbol: "€", name: "Euro" },
   { code: "USD", symbol: "$", name: "Dollar Américain" },
   { code: "XOF", symbol: "CFA", name: "Franc CFA (UEMOA)" },
-  { code: "XAF", symbol: "FCFA", name: "Franc CFA (CEMAC)" },
+  { code: "XAF", symbol: "XAF", name: "Franc CFA (CEMAC)" },
   { code: "NGN", symbol: "₦", name: "Naira Nigérian" },
   { code: "GHS", symbol: "₵", name: "Cedi Ghanéen" },
   { code: "KES", symbol: "KSh", name: "Shilling Kényan" },

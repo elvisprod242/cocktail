@@ -48,7 +48,7 @@ export const Kitchen: React.FC<KitchenProps> = ({
   const activeOrders = orders
     .filter((o) => o.status !== OrderStatus.PAID)
     .sort((a, b) => b.timestamp - a.timestamp);
-  const currency = getSetting("currency", "FCFA");
+  const currency = getSetting("currency", "XAF");
 
   useEffect(() => {
     const newOrders = orders.filter(

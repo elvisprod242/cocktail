@@ -130,12 +130,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   return (
     <>
       {/* Desktop Sidebar */}
-      <nav className="hidden md:flex flex-col w-20 lg:w-64 bg-slate-900 border-r border-slate-800 h-screen fixed left-0 top-0 z-50 shadow-2xl">
-        <div className="p-6 flex items-center justify-center lg:justify-start">
+      <nav className="hidden md:flex flex-col w-20 xl:w-64 bg-slate-900 border-r border-slate-800 h-screen fixed left-0 top-0 z-50 shadow-2xl">
+        <div className="p-6 flex items-center justify-center xl:justify-start">
           <div className="w-10 h-10 bg-gradient-to-tr from-bar-accent to-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-bar-accent/30">
             <Beer className="text-white" size={24} />
           </div>
-          <span className="hidden lg:block ml-3 font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+          <span className="hidden xl:block ml-3 font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
             BARFLOW
           </span>
         </div>
@@ -152,7 +152,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               }`}
             >
               <span className="flex-shrink-0">{item.icon}</span>
-              <span className="hidden lg:block ml-3 font-bold text-sm">
+              <span className="hidden xl:block ml-3 font-bold text-sm">
                 {item.label}
               </span>
             </Link>
@@ -160,7 +160,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         <div className="p-4 border-t border-slate-800 mt-auto bg-slate-950/50">
-          <div className="flex items-center gap-3 mb-4 hidden lg:flex">
+          <div className="flex items-center gap-3 mb-4 hidden xl:flex">
             <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center text-bar-accent border border-slate-700">
               <ShieldCheck size={20} />
             </div>
@@ -171,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="w-full flex items-center justify-center gap-2 p-3 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-xl transition-all font-bold text-sm"
           >
             <LogOut size={20} />
-            <span className="hidden lg:block">Déconnexion</span>
+            <span className="hidden xl:block">Déconnexion</span>
           </button>
         </div>
       </nav>
